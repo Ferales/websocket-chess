@@ -1,0 +1,26 @@
+html, body{
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+#chessboard{
+    width: 40%;
+    border: solid black 1px;
+    margin-left: 30%;
+    margin-top: 5%;
+    aspect-ratio: 1 / 1;
+    display: grid;
+    grid-template-rows: repeat(8, 12.5%);
+    grid-template-columns: repeat(8, 12.5%);
+    grid-auto-flow: row;
+}
+
+.square-black{
+    background-color: black;
+}
+
+.square-white{
+    background-color: white;
+}
