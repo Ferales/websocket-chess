@@ -1,8 +1,8 @@
 export class Piece {
-  constructor(color, squareID) {
+  constructor(color) {
     this.color = color;
-    this.squareID = squareID;
     this.legalMoves = [];
+    this.squareID;
   }
 
   moveTo(squareID) {
@@ -14,12 +14,12 @@ export class Piece {
 
 export class Pawn extends Piece {}
 
-class Knight extends Piece {}
+export class Knight extends Piece {}
 
-class Bishop extends Piece {}
+export class Bishop extends Piece {}
 
-class Rook extends Piece {}
+export class Rook extends Piece {}
 
-class Queen extends Piece {}
+export class Queen extends Piece {}
 
-class King extends Piece {}
+export class King extends Piece {}
