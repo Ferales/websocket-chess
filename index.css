@@ -4,21 +4,22 @@ body {
   margin: 0;
   padding: 0;
   overflow: hidden;
-  background-color: lightgrey;
+  background: radial-gradient(circle at center, #d6d6d6, #3c3c3c);
+  /* background-color: #333333; */
 }
 
 #chessboard {
   width: 40%;
   border: solid black 1px;
   margin-left: 30%;
-  margin-top: 3%;
+  /* margin-top: 2%; */
   aspect-ratio: 1 / 1;
   display: grid;
   grid-template-rows: repeat(8, 12.5%);
   grid-template-columns: repeat(8, 12.5%);
   grid-auto-flow: row;
-  border: none;
   user-select: none;
+  grid-row: span 2;
 }
 
 .square-black {
@@ -35,7 +36,78 @@ body {
   position: relative;
   top: 50%;
   left: 50%;
-  transform: translateX(-50%) translateY(-50%);
+  transform: translateX(-50%) translateY(-50%) scale(0.9);
   user-select: none;
   pointer-events: none;
+}
+
+#main {
+  display: flex;
+  margin-top: 3vw;
+}
+.timer {
+  display: flex;
+  border: 1px solid black;
+  background: linear-gradient(45deg, #7e7e7e, #515151);
+  /* background-color: #abcabc; */
+  height: 3em;
+  width: 10em;
+  font-weight: 600;
+  font-size: larger;
+  align-items: center;
+  justify-content: center;
+}
+
+.timer-bottom {
+  margin-top: auto;
+}
+
+.ui {
+  display: grid;
+  grid-template-rows: 10% 80% 10%;
+  width: 10px;
+  margin-left: 3em;
+}
+
+.options {
+  width: 250px;
+  font-weight: 500;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transform: translateX(-10%);
+  row-gap: 5em;
+}
+
+.surrender {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.draw {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.half {
+  margin-left: 5px;
+  font-size: 36px;
+}
+
+.btn {
+  background-color: #333;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  min-width: 10em;
+}
+
+.btn:hover {
+  background-color: #555;
 }

@@ -3,18 +3,22 @@ import * as Board from "./board.js";
 
 let chessboard = document.getElementById("chessboard");
 let moving = false;
+let image;
+let startX, startY;
 
 function move(e) {
-  var newX = e.clientX - 10;
-  var newY = e.clientY - 10;
-  console.log(image);
+  var newX = e.clientX - startX + 40;
+  var newY = e.clientY - startY + 30;
   image.style.left = newX + "px";
   image.style.top = newY + "px";
+  console.log(newX, newY);
 }
 
 function initialClick(e) {
   if (e.srcElement.firstChild) {
-    console.log(e.srcElement);
+    image = e.srcElement.firstChild;
+    startX = e.clientX;
+    startY = e.clientY;
     if (moving) {
       document.removeEventListener("mousemove", move);
       moving = !moving;
@@ -22,8 +26,6 @@ function initialClick(e) {
     }
 
     moving = !moving;
-    image = this;
-
     document.addEventListener("mousemove", move, false);
   }
 }
@@ -31,6 +33,7 @@ function initialClick(e) {
 for (let i = 0; i < 8; i++) {
   for (let j = 0; j < 8; j++) {
     let square = document.createElement("div");
+    if (square.srcElement) console.log(square.srcElement.firstChild);
     let colorClass = (i + j) % 2 == 0 ? "square-white" : "square-black";
     square.classList.add(colorClass);
     let squareID = (i * 8 + j).toString();

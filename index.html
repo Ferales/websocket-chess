@@ -8,8 +8,23 @@
     <title>Document</title>
   </head>
   <body>
-    <div id="chessboard"></div>
-
+    <div id="main">
+      <div id="chessboard"></div>
+      <div class="ui">
+        <div class="timer timer-top">10:00</div>
+        <div class="options">
+          <div class="btn surrender">
+            <span>Poddaj się</span>
+            <img class="flag" src="icons/flag.png" />
+          </div>
+          <div class="btn draw">
+            <span>Zaproponuj remis</span>
+            <span class="half">&#189;</span>
+          </div>
+        </div>
+        <div class="timer timer-bottom">10:00</div>
+      </div>
+    </div>
     <script type="module" src="index.js"></script>
   </body>
 </html>
