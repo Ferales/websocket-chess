@@ -1,0 +1,45 @@
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: radial-gradient(circle at center, #d6d6d6, #3c3c3c);
+  /* background-color: #333333; */
+}
+
+.main {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -40%);
+  text-align: center;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  grid-auto-flow: row;
+  user-select: none;
+  grid-row: span 2;
+  row-gap: 1vh;
+  column-gap: 1vw;
+}
+
+.item {
+  width: 20vw;
+  height: 20vh;
+  border: solid 1px black;
+  background-color: #444;
+  font-size: 34px;
+  color: #d6d6d6;
+  font-weight: 700;
+}
+
+.item:hover {
+  background-color: #555;
+}
+
+.main-text {
+  color: #111;
+}

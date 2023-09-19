@@ -1,8 +1,8 @@
 export class Piece {
-  constructor(color) {
+  constructor(color, squareID) {
     this.color = color;
+    this.squareID = squareID;
     this.legalMoves = [];
-    this.squareID;
   }
 
   moveTo(squareID) {

@@ -2,32 +2,36 @@ import * as Pieces from "./pieces.js";
 import * as Board from "./board.js";
 
 let chessboard = document.getElementById("chessboard");
-let moving = false;
-let image;
-let startX, startY;
+let currentPiece;
+let selectedPiece;
+let color = "white";
 
-function move(e) {
-  var newX = e.clientX - startX + 40;
-  var newY = e.clientY - startY + 30;
-  image.style.left = newX + "px";
-  image.style.top = newY + "px";
-  console.log(newX, newY);
+function resetBorders() {
+  for (let i = 0; i < 8; i++) {
+    for (let j = 0; j < 8; j++) {
+      let square = document.getElementById((i * 8 + j).toString());
+      square.style.border = "";
+    }
+  }
 }
 
-function initialClick(e) {
-  if (e.srcElement.firstChild) {
-    image = e.srcElement.firstChild;
-    startX = e.clientX;
-    startY = e.clientY;
-    if (moving) {
-      document.removeEventListener("mousemove", move);
-      moving = !moving;
+function squareClick(e) {
+  resetBorders();
+  let square = e.target;
+  if (square.firstChild) {
+    selectedPiece = square.firstChild;
+    selectedPieceColor = selectedPiece.src.includes("white")
+      ? "white"
+      : "black";
+    if (selectedPieceColor != color) {
+      selectedPiece = null;
       return;
     }
-
-    moving = !moving;
-    document.addEventListener("mousemove", move, false);
+    square.style.border = "3px solid green";
+  } else if (selectedPiece) {
+    square.appendChild(selectedPiece);
   }
+  //selectedPiece = null;
 }
 
 for (let i = 0; i < 8; i++) {
@@ -38,7 +42,7 @@ for (let i = 0; i < 8; i++) {
     square.classList.add(colorClass);
     let squareID = (i * 8 + j).toString();
     square.id = squareID;
-    square.addEventListener("mousedown", initialClick);
+    square.addEventListener("click", squareClick);
     chessboard.appendChild(square);
   }
 }
@@ -49,13 +53,13 @@ for (let i = 0; i < 8; i++) {
   for (let j = 0; j < 8; j++) {
     if (board[i][j] != null) {
       let squareID = (i * 8 + j).toString();
+      board[i][j].squareID = squareID;
       let square = document.getElementById(squareID);
       let color = board[i][j].color;
       let piece = board[i][j].constructor.name.toLowerCase();
       let fileName = `icons/${color}_${piece}.png`;
       let img = document.createElement("img");
       img.src = fileName;
-      img.addEventListener("mousedown", initialClick);
       img.classList.add("icon");
       square.appendChild(img);
     }
@@ -63,3 +67,9 @@ for (let i = 0; i < 8; i++) {
 }
 
 console.log(board);
+function rotateChessboard(board) {
+  const reversedRows = board.slice().reverse();
+  const rotatedBoard = reversedRows.map((row) => row.slice().reverse());
+
+  return rotatedBoard;
+}
