@@ -10,9 +10,50 @@ export class Piece {
     this.squareID = squareID;
     return oldID;
   }
+
+  getIndexes() {
+    let row = Math.floor(this.squareID / 8);
+    let column = this.squareID % 8;
+    return [row, column];
+  }
+
+  getSquareId(row, column) {
+    return row * 8 + column;
+  }
 }
 
-export class Pawn extends Piece {}
+export class Pawn extends Piece {
+  constructor() {
+    this.moved = false;
+  }
+
+  calculateLegalMoves(board) {
+    let legalSquares = [];
+    let [row, column] = this.getIndexes();
+    let rowOffset = this.color == "white" ? 1 : -1;
+    if (board[row + rowOffset][column] == null) {
+      legalSquares.push(this.getSquareId(row + rowOffset, column));
+    }
+    if (!this.moved && board[row + rowOffset * 2][column] != null) {
+      legalSquares.push(this.getSquareId(row + rowOffset * 2, column));
+    }
+
+    if (
+      board[row + rowOffset][column - 1] != null &&
+      board[row + rowOffset][column - 1].color != this.color
+    ) {
+      legalSquares.push(this.getSquareId(row + rowOffset, column - 1));
+    }
+    if (
+      board[row + rowOffset][column + 1] != null &&
+      board[row + rowOffset][column + 1].color != this.color
+    ) {
+      legalSquares.push(this.getSquareId(row + rowOffset, column + 1));
+    }
+
+    return legalSquares;
+  }
+}
 
 export class Knight extends Piece {}
 
