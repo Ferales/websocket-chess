@@ -4,8 +4,13 @@ import * as Board from "./board.js";
 let chessboard = document.getElementById("chessboard");
 let currentPiece;
 let selectedPiece;
+let selectedPieceSquareId;
+let targetSquareId;
 let selectedPieceColor;
 let color = "white";
+let row;
+let column;
+let board = new Board.Board().board;
 
 let resetBorders = () => {
   for (let i = 0; i < 8; i++) {
@@ -19,28 +24,65 @@ let resetBorders = () => {
 let squareClick = (e) => {
   resetBorders();
   let square = e.target;
-  if (square.firstChild) {
-    selectedPiece = square.firstChild;
-    selectedPieceColor = selectedPiece.src.includes("white")
-      ? "white"
-      : "black";
-    if (selectedPieceColor != color) {
-      selectedPiece = null;
-      return;
+  currentPiece = square.firstChild;
+
+  if (!selectedPiece) {
+    if (currentPiece) {
+      selectedPieceColor = currentPiece.src.includes("white")
+        ? "white"
+        : "black";
+
+      if (selectedPieceColor == color) {
+        square.style.border = "3px solid green";
+        selectedPiece = currentPiece;
+        selectedPieceSquareId = square.id;
+      }
     }
-    square.style.border = "3px solid green";
-  } else if (selectedPiece) {
-    square.appendChild(selectedPiece);
+  } else {
+    if (currentPiece) {
+      selectedPieceColor = currentPiece.src.includes("white")
+        ? "white"
+        : "black";
+
+      if (selectedPieceColor != color) {
+        row = Math.floor(selectedPieceSquareId / 8);
+        column = selectedPieceSquareId % 8;
+        targetSquareId = parseInt(currentPiece.parentNode.id);
+        if (board[row][column].moveTo(targetSquareId, board)) {
+          selectedPiece = board[row][column];
+          board[row][column] = null;
+          board[Math.floor(targetSquareId / 8)][targetSquareId % 8] =
+            selectedPiece;
+          selectedPiece = null;
+          renderBoard();
+        }
+      } else {
+        square.style.border = "3px solid green";
+        selectedPiece = currentPiece;
+        selectedPieceSquareId = square.id;
+      }
+    } else {
+      row = Math.floor(selectedPieceSquareId / 8);
+      column = selectedPieceSquareId % 8;
+      targetSquareId = parseInt(square.id);
+      if (board[row][column].moveTo(targetSquareId, board)) {
+        selectedPiece = board[row][column];
+        board[row][column] = null;
+        board[Math.floor(targetSquareId / 8)][targetSquareId % 8] =
+          selectedPiece;
+        selectedPiece = null;
+        renderBoard();
+      }
+    }
   }
-  //selectedPiece = null;
 };
 
 let renderBoard = () => {
+  clearBoard();
   for (let i = 0; i < 8; i++) {
     for (let j = 0; j < 8; j++) {
       if (board[i][j] != null) {
         let squareID = (i * 8 + j).toString();
-        board[i][j].squareID = squareID;
         let square = document.getElementById(squareID);
         let color = board[i][j].color;
         let piece = board[i][j].constructor.name.toLowerCase();
@@ -73,21 +115,20 @@ let rotateChessboard = (board) => {
   return rotatedBoard;
 };
 
-for (let i = 0; i < 8; i++) {
-  for (let j = 0; j < 8; j++) {
-    let square = document.createElement("div");
-    if (square.srcElement) console.log(square.srcElement.firstChild);
-    let colorClass = (i + j) % 2 == 0 ? "square-white" : "square-black";
-    square.classList.add(colorClass);
-    let squareID = (i * 8 + j).toString();
-    square.id = squareID;
-    square.addEventListener("click", squareClick);
-    chessboard.appendChild(square);
+let startGame = () => {
+  for (let i = 0; i < 8; i++) {
+    for (let j = 0; j < 8; j++) {
+      let square = document.createElement("div");
+      let colorClass = (i + j) % 2 == 0 ? "square-white" : "square-black";
+      square.classList.add(colorClass);
+      let squareID = (i * 8 + j).toString();
+      square.id = squareID;
+      square.addEventListener("click", squareClick);
+      chessboard.appendChild(square);
+    }
   }
-}
 
-let board = new Board.Board().board;
+  renderBoard();
+};
 
-renderBoard();
-
-console.log(board);
+startGame();

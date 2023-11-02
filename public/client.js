@@ -38,7 +38,6 @@ let changeTimers = () => {
   }
   currentTimer.start();
   timerInterval = setInterval(() => {
-    console.log(currentTimerElement);
     currentTimerElement.innerHTML = millisecondsToTimeString(currentTimer.time);
   }, 100);
 };

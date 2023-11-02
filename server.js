@@ -73,6 +73,7 @@ io.on("connection", (socket, data) => {
       availableRoom.full = true;
       socket.join(availableRoom.roomID);
       socket.inGame = true;
+      console.log("STARTING GAME");
       startGame(availableRoom);
     }
     //users[socket.id] = { roomID, socket };

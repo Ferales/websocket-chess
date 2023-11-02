@@ -3,12 +3,21 @@ export class Piece {
     this.color = color;
     this.squareID = squareID;
     this.legalMoves = [];
+    this.calculatedLegalMoves = false;
+    this.moved = false;
   }
 
-  moveTo(squareID) {
-    let oldID = this.squareID;
-    this.squareID = squareID;
-    return oldID;
+  moveTo(squareID, board) {
+    // if (!this.calculatedLegalMoves) {
+    this.calculateLegalMoves(board);
+    // }
+    if (this.legalMoves.includes(squareID)) {
+      this.squareID = squareID;
+      this.moved = true;
+      return true;
+    } else {
+      return false;
+    }
   }
 
   getIndexes() {
@@ -23,18 +32,18 @@ export class Piece {
 }
 
 export class Pawn extends Piece {
-  constructor() {
-    this.moved = false;
+  constructor(color, squareID) {
+    super(color, squareID);
   }
 
   calculateLegalMoves(board) {
     let legalSquares = [];
     let [row, column] = this.getIndexes();
-    let rowOffset = this.color == "white" ? 1 : -1;
+    let rowOffset = this.color == "white" ? -1 : 1;
     if (board[row + rowOffset][column] == null) {
       legalSquares.push(this.getSquareId(row + rowOffset, column));
     }
-    if (!this.moved && board[row + rowOffset * 2][column] != null) {
+    if (!this.moved && board[row + rowOffset * 2][column] == null) {
       legalSquares.push(this.getSquareId(row + rowOffset * 2, column));
     }
 
@@ -51,7 +60,8 @@ export class Pawn extends Piece {
       legalSquares.push(this.getSquareId(row + rowOffset, column + 1));
     }
 
-    return legalSquares;
+    this.calculatedLegalMoves = true;
+    this.legalMoves = legalSquares;
   }
 }
 
