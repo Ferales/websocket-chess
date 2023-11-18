@@ -68,15 +68,24 @@ io.on("connection", (socket, data) => {
       console.log("Room created");
       rooms.push(room);
       socket.join(room.roomID);
+      socket.roomID = room.roomID;
       socket.inGame = true;
     } else {
       availableRoom.full = true;
       socket.join(availableRoom.roomID);
+      socket.roomID = availableRoom.roomID;
       socket.inGame = true;
       console.log("STARTING GAME");
       startGame(availableRoom);
     }
     //users[socket.id] = { roomID, socket };
+  });
+
+  socket.on("sendBoard", (board) => {
+    let players = getConnectedClients(socket.roomID);
+    let index = players.indexOf(socket.id);
+    players.splice(index, 1);
+    io.to(players[0]).emit("getBoard", board);
   });
 
   // Handle user request to join a room
@@ -137,11 +146,13 @@ function startGame(room) {
   }
 
   io.to(roomClients[0]).emit("gameStart", player1Color);
+  roomClients[0].color = player1Color;
+
   io.to(roomClients[1]).emit("gameStart", player2Color);
+  roomClients[1].color = player2Color;
 }
 
 function getConnectedClients(roomID) {
   const roomClients = io.sockets.adapter.rooms.get(roomID);
-
   return Array.from(roomClients);
 }

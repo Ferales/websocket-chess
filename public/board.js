@@ -24,7 +24,7 @@ export class Board {
         ];
         this.board.push(row);
       } else {
-        this.board.push([]);
+        this.board.push(Array(8).fill("EMPTY"));
       }
       for (let j = 0; j < 8; j++) {
         if (i == 1) {

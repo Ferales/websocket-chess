@@ -1,4 +1,11 @@
 import { Timer } from "./timer.js";
+import {
+  startGame,
+  renderBoard,
+  updateBoard,
+  rotateChessboard,
+} from "./index.js";
+import * as Pieces from "./pieces.js";
 
 let time = localStorage.getItem("time");
 let increment = localStorage.getItem("increment");
@@ -9,6 +16,15 @@ let timerBlackElement;
 let currentTimer;
 let currentTimerElement;
 let timerInterval;
+let playerColor;
+let classNames = {
+  pawn: Pieces.Pawn,
+  knight: Pieces.Knight,
+  bishop: Pieces.Bishop,
+  rook: Pieces.Rook,
+  queen: Pieces.Queen,
+  king: Pieces.King,
+};
 
 let createTimers = (color) => {
   if (color == "white") {
@@ -87,10 +103,31 @@ socket.on("connect", () => {
   socket.emit("gameRequest", [time, increment]);
 
   socket.on("gameStart", (color) => {
-    console.log(color);
+    playerColor = color;
     let [timerWhite, timerBlack] = createTimers(color);
-    changeTimers();
+    startGame();
+    // changeTimers();
+  });
+
+  socket.on("getBoard", (board) => {
+    for (let i = 0; i < 8; i++) {
+      for (let j = 0; j < 8; j++) {
+        if (board[i][j] != "EMPTY") {
+          debugger;
+          let pieceName = board[i][j].name;
+          let color = board[i][j].color;
+          let squareID = board[i][j].squareID;
+          let moved = board[i][j].moved;
+          let piece = classNames[pieceName];
+          board[i][j] = new piece(color, squareID, moved);
+        }
+      }
+    }
+    updateBoard(rotateChessboard(board));
+    renderBoard();
   });
 
   socket.on("timeSync", () => {});
 });
+
+export { socket, playerColor };

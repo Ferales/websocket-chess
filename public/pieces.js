@@ -1,10 +1,11 @@
 export class Piece {
-  constructor(color, squareID) {
+  constructor(color, squareID, moved = false) {
     this.color = color;
     this.squareID = squareID;
+    this.moved = moved;
     this.legalMoves = [];
     this.calculatedLegalMoves = false;
-    this.moved = false;
+    this.name;
   }
 
   moveTo(squareID, board) {
@@ -23,6 +24,10 @@ export class Piece {
   getIndexes() {
     let row = Math.floor(this.squareID / 8);
     let column = this.squareID % 8;
+    if (this.color == "black") {
+      row = 7 - row;
+      column = 7 - column;
+    }
     return [row, column];
   }
 
@@ -37,7 +42,7 @@ export class Piece {
     column += columnOffset;
 
     while (row >= 0 && row <= 7 && column >= 0 && column <= 7) {
-      if (!board[row][column]) {
+      if (board[row][column] == "EMPTY") {
         legalSquares.push(this.getSquareId(row, column));
       } else {
         if (board[row][column].color != this.color) {
@@ -55,27 +60,28 @@ export class Piece {
 export class Pawn extends Piece {
   constructor(color, squareID) {
     super(color, squareID);
+    this.name = "pawn";
   }
 
   calculateLegalMoves(board) {
     let legalSquares = [];
     let [row, column] = this.getIndexes();
-    let rowOffset = this.color == "white" ? -1 : 1;
-    if (board[row + rowOffset][column] == null) {
+    let rowOffset = -1;
+    if (board[row + rowOffset][column] == "EMPTY") {
       legalSquares.push(this.getSquareId(row + rowOffset, column));
     }
-    if (!this.moved && board[row + rowOffset * 2][column] == null) {
+    if (!this.moved && board[row + rowOffset * 2][column] == "EMPTY") {
       legalSquares.push(this.getSquareId(row + rowOffset * 2, column));
     }
 
     if (
-      board[row + rowOffset][column - 1] != null &&
+      board[row + rowOffset][column - 1] != "EMPTY" &&
       board[row + rowOffset][column - 1].color != this.color
     ) {
       legalSquares.push(this.getSquareId(row + rowOffset, column - 1));
     }
     if (
-      board[row + rowOffset][column + 1] != null &&
+      board[row + rowOffset][column + 1] != "EMPTY" &&
       board[row + rowOffset][column + 1].color != this.color
     ) {
       legalSquares.push(this.getSquareId(row + rowOffset, column + 1));
@@ -89,6 +95,7 @@ export class Pawn extends Piece {
 export class Knight extends Piece {
   constructor(color, squareID) {
     super(color, squareID);
+    this.name = "knight";
   }
 
   calculateLegalMoves(board) {
@@ -127,6 +134,7 @@ export class Knight extends Piece {
 export class Bishop extends Piece {
   constructor(color, squareID) {
     super(color, squareID);
+    this.name = "bishop";
   }
 
   calculateLegalMoves(board) {
@@ -150,6 +158,7 @@ export class Bishop extends Piece {
 export class Rook extends Piece {
   constructor(color, squareID) {
     super(color, squareID);
+    this.name = "rook";
   }
 
   calculateLegalMoves(board) {
@@ -173,6 +182,7 @@ export class Rook extends Piece {
 export class Queen extends Piece {
   constructor(color, squareID) {
     super(color, squareID);
+    this.name = "queen";
   }
 
   calculateLegalMoves(board) {
@@ -200,6 +210,7 @@ export class Queen extends Piece {
 export class King extends Piece {
   constructor(color, squareID) {
     super(color, squareID);
+    this.name = "king";
   }
 
   calculateLegalMoves(board) {

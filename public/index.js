@@ -1,5 +1,6 @@
 import * as Pieces from "./pieces.js";
 import * as Board from "./board.js";
+import { socket, playerColor } from "./client.js";
 
 let chessboard = document.getElementById("chessboard");
 let currentPiece;
@@ -7,7 +8,6 @@ let selectedPiece;
 let selectedPieceSquareId;
 let targetSquareId;
 let selectedPieceColor;
-let color = "white";
 let row;
 let column;
 let board = new Board.Board().board;
@@ -32,7 +32,7 @@ let squareClick = (e) => {
         ? "white"
         : "black";
 
-      if (selectedPieceColor == color) {
+      if (selectedPieceColor == playerColor) {
         square.style.border = "3px solid green";
         selectedPiece = currentPiece;
         selectedPieceSquareId = square.id;
@@ -43,17 +43,22 @@ let squareClick = (e) => {
       selectedPieceColor = currentPiece.src.includes("white")
         ? "white"
         : "black";
-
-      if (selectedPieceColor != color) {
+      if (selectedPieceColor != playerColor) {
         row = Math.floor(selectedPieceSquareId / 8);
         column = selectedPieceSquareId % 8;
         targetSquareId = parseInt(currentPiece.parentNode.id);
+        if (playerColor == "black") {
+          row = 7 - row;
+          column = 7 - column;
+          targetSquareId = 63 - targetSquareId;
+        }
         if (board[row][column].moveTo(targetSquareId, board)) {
           selectedPiece = board[row][column];
-          board[row][column] = null;
+          board[row][column] = "EMPTY";
           board[Math.floor(targetSquareId / 8)][targetSquareId % 8] =
             selectedPiece;
-          selectedPiece = null;
+          socket.emit("sendBoard", board);
+          selectedPiece = "EMPTY";
           renderBoard();
         }
       } else {
@@ -62,14 +67,21 @@ let squareClick = (e) => {
         selectedPieceSquareId = square.id;
       }
     } else {
+      debugger;
       row = Math.floor(selectedPieceSquareId / 8);
       column = selectedPieceSquareId % 8;
       targetSquareId = parseInt(square.id);
+      if (playerColor == "black") {
+        row = 7 - row;
+        column = 7 - column;
+        targetSquareId = 63 - targetSquareId;
+      }
       if (board[row][column].moveTo(targetSquareId, board)) {
         selectedPiece = board[row][column];
-        board[row][column] = null;
+        board[row][column] = "EMPTY";
         board[Math.floor(targetSquareId / 8)][targetSquareId % 8] =
           selectedPiece;
+        socket.emit("sendBoard", board);
         selectedPiece = null;
         renderBoard();
       }
@@ -79,13 +91,17 @@ let squareClick = (e) => {
 
 let renderBoard = () => {
   clearBoard();
+  console.log("RENDERING", board);
   for (let i = 0; i < 8; i++) {
     for (let j = 0; j < 8; j++) {
-      if (board[i][j] != null) {
+      if (board[i][j] != "EMPTY") {
         let squareID = (i * 8 + j).toString();
+        if (playerColor == "black") {
+          squareID = 63 - squareID;
+        }
         let square = document.getElementById(squareID);
         let color = board[i][j].color;
-        let piece = board[i][j].constructor.name.toLowerCase();
+        let piece = board[i][j].name;
         let fileName = `icons/${color}_${piece}.png`;
         let img = document.createElement("img");
         img.src = fileName;
@@ -109,26 +125,39 @@ let clearBoard = () => {
 };
 
 let rotateChessboard = (board) => {
+  console.log("ORIGINAL", board);
   const reversedRows = board.slice().reverse();
   const rotatedBoard = reversedRows.map((row) => row.slice().reverse());
 
+  console.log("ROTATED", rotatedBoard);
   return rotatedBoard;
 };
 
+let updateBoard = (newBoard) => {
+  board = newBoard;
+};
+
 let startGame = () => {
+  console.log(playerColor);
   for (let i = 0; i < 8; i++) {
     for (let j = 0; j < 8; j++) {
       let square = document.createElement("div");
       let colorClass = (i + j) % 2 == 0 ? "square-white" : "square-black";
       square.classList.add(colorClass);
       let squareID = (i * 8 + j).toString();
+      if (playerColor == "black") {
+        squareID = 63 - squareID;
+      }
       square.id = squareID;
       square.addEventListener("click", squareClick);
       chessboard.appendChild(square);
     }
   }
 
+  if (playerColor == "black") {
+    updateBoard(rotateChessboard(board));
+  }
   renderBoard();
 };
 
-startGame();
+export { startGame, renderBoard, updateBoard, rotateChessboard };
