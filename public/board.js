@@ -1,11 +1,5 @@
 import * as Pieces from "./pieces.js";
 
-class Square {
-  constructor(piece) {
-    this.piece = piece;
-  }
-}
-
 export class Board {
   constructor() {
     this.board = [];

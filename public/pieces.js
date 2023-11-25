@@ -4,17 +4,64 @@ export class Piece {
     this.squareID = squareID;
     this.moved = moved;
     this.legalMoves = [];
-    this.calculatedLegalMoves = false;
     this.name;
   }
 
+  static checkForCheck(board, color) {
+    let king;
+    for (let i = 0; i < 8; i++) {
+      for (let j = 0; j < 8; j++) {
+        if (
+          board[i][j] != "EMPTY" &&
+          board[i][j].name == "king" &&
+          board[i][j].color == color
+        ) {
+          king = board[i][j];
+          break;
+        }
+      }
+    }
+    for (let i = 0; i < 8; i++) {
+      for (let j = 0; j < 8; j++) {
+        if (board[i][j] != "EMPTY" && board[i][j].color != color) {
+          let piece = board[i][j];
+          if (piece.name == "king") {
+            piece.calculateLegalMoves(board, false);
+          } else {
+            piece.calculateLegalMoves(board);
+          }
+          if (piece.legalMoves.includes(king.squareID)) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+
   moveTo(squareID, board) {
-    // if (!this.calculatedLegalMoves) {
     this.calculateLegalMoves(board);
-    // }
     if (this.legalMoves.includes(squareID)) {
+      let tmpBoard = structuredClone(board);
+      deserializeBoard(tmpBoard);
+      let checkingRow = Math.floor(squareID / 8);
+      let checkingColumn = squareID % 8;
+      let [row, column] = this.getIndexes();
+      tmpBoard[checkingRow][checkingColumn] = tmpBoard[row][column];
+      tmpBoard[checkingRow][checkingColumn].squareID = squareID;
+      tmpBoard[row][column] = "EMPTY";
+      if (Piece.checkForCheck(tmpBoard, this.color)) {
+        return false;
+      }
       this.squareID = squareID;
       this.moved = true;
+      for (let i = 0; i < 8; i++) {
+        for (let j = 0; j < 8; j++) {
+          if (board[i][j] != "EMPTY") {
+            board[i][j].legalMoves = [];
+          }
+        }
+      }
       return true;
     } else {
       return false;
@@ -24,10 +71,6 @@ export class Piece {
   getIndexes() {
     let row = Math.floor(this.squareID / 8);
     let column = this.squareID % 8;
-    if (this.color == "black") {
-      row = 7 - row;
-      column = 7 - column;
-    }
     return [row, column];
   }
 
@@ -64,9 +107,12 @@ export class Pawn extends Piece {
   }
 
   calculateLegalMoves(board) {
+    if (this.legalMoves.length) {
+      return;
+    }
     let legalSquares = [];
     let [row, column] = this.getIndexes();
-    let rowOffset = -1;
+    let rowOffset = this.color == "white" ? -1 : 1;
     if (board[row + rowOffset][column] == "EMPTY") {
       legalSquares.push(this.getSquareId(row + rowOffset, column));
     }
@@ -75,19 +121,20 @@ export class Pawn extends Piece {
     }
 
     if (
+      column != 0 &&
       board[row + rowOffset][column - 1] != "EMPTY" &&
       board[row + rowOffset][column - 1].color != this.color
     ) {
       legalSquares.push(this.getSquareId(row + rowOffset, column - 1));
     }
     if (
+      column != 7 &&
       board[row + rowOffset][column + 1] != "EMPTY" &&
       board[row + rowOffset][column + 1].color != this.color
     ) {
       legalSquares.push(this.getSquareId(row + rowOffset, column + 1));
     }
 
-    this.calculatedLegalMoves = true;
     this.legalMoves = legalSquares;
   }
 }
@@ -99,6 +146,9 @@ export class Knight extends Piece {
   }
 
   calculateLegalMoves(board) {
+    if (this.legalMoves.length) {
+      return;
+    }
     let legalSquares = [];
     let [row, column] = this.getIndexes();
     let knightMoves = [
@@ -138,6 +188,9 @@ export class Bishop extends Piece {
   }
 
   calculateLegalMoves(board) {
+    if (this.legalMoves.length) {
+      return;
+    }
     let legalSquares = [];
     let bishopMoves = [
       [1, 1],
@@ -162,6 +215,9 @@ export class Rook extends Piece {
   }
 
   calculateLegalMoves(board) {
+    if (this.legalMoves.length) {
+      return;
+    }
     let legalSquares = [];
     let rookMoves = [
       [1, 0],
@@ -186,6 +242,9 @@ export class Queen extends Piece {
   }
 
   calculateLegalMoves(board) {
+    if (this.legalMoves.length) {
+      return;
+    }
     let legalSquares = [];
     let queenMoves = [
       [1, 1],
@@ -213,7 +272,10 @@ export class King extends Piece {
     this.name = "king";
   }
 
-  calculateLegalMoves(board) {
+  calculateLegalMoves(board, calculateCastle = true) {
+    if (this.legalMoves.length) {
+      return;
+    }
     let legalSquares = [];
     let [row, column] = this.getIndexes();
 
@@ -235,13 +297,82 @@ export class King extends Piece {
           continue;
         }
 
-        if (!board[targetRow][targetColumn]) {
+        if (board[targetRow][targetColumn] == "EMPTY") {
           legalSquares.push(this.getSquareId(targetRow, targetColumn));
         } else if (board[targetRow][targetColumn].color != this.color) {
           legalSquares.push(this.getSquareId(targetRow, targetColumn));
         }
       }
     }
+    if (!this.moved && calculateCastle) {
+      debugger;
+      let rookRow = this.color == "white" ? 7 : 0;
+      let tmpBoard = structuredClone(board);
+      deserializeBoard(tmpBoard);
+      if (
+        board[rookRow][0] != "EMPTY" &&
+        board[rookRow][0].name == "rook" &&
+        board[rookRow][0].moved == false &&
+        board[rookRow][3] == "EMPTY" &&
+        board[rookRow][2] == "EMPTY"
+      ) {
+        tmpBoard[rookRow][3] = tmpBoard[rookRow][4];
+        tmpBoard[rookRow][3].squareID -= 1;
+        tmpBoard[rookRow][4] = "EMPTY";
+        if (!Piece.checkForCheck(tmpBoard, this.color)) {
+          tmpBoard[rookRow][2] = tmpBoard[rookRow][3];
+          tmpBoard[rookRow][2].squareID -= 1;
+          tmpBoard[rookRow][3] = "EMPTY";
+          if (!Piece.checkForCheck(tmpBoard, this.color)) {
+            legalSquares.push(this.getSquareId(rookRow, 2));
+          }
+        }
+      }
+
+      if (
+        board[rookRow][0] != "EMPTY" &&
+        board[rookRow][7].name == "rook" &&
+        board[rookRow][7].moved == false &&
+        board[rookRow][5] == "EMPTY" &&
+        board[rookRow][6] == "EMPTY"
+      ) {
+        tmpBoard[rookRow][5] = tmpBoard[rookRow][4];
+        tmpBoard[rookRow][5].squareID += 1;
+        tmpBoard[rookRow][4] = "EMPTY";
+        if (!Piece.checkForCheck(tmpBoard, this.color)) {
+          tmpBoard[rookRow][6] = tmpBoard[rookRow][5];
+          tmpBoard[rookRow][6].squareID += 1;
+          tmpBoard[rookRow][5] = "EMPTY";
+          if (!Piece.checkForCheck(tmpBoard, this.color)) {
+            legalSquares.push(this.getSquareId(rookRow, 6));
+          }
+        }
+      }
+    }
     this.legalMoves = legalSquares;
   }
 }
+
+export let deserializeBoard = (board) => {
+  let classNames = {
+    pawn: Pawn,
+    knight: Knight,
+    bishop: Bishop,
+    rook: Rook,
+    queen: Queen,
+    king: King,
+  };
+
+  for (let i = 0; i < 8; i++) {
+    for (let j = 0; j < 8; j++) {
+      if (board[i][j] != "EMPTY") {
+        let pieceName = board[i][j].name;
+        let color = board[i][j].color;
+        let squareID = board[i][j].squareID;
+        let moved = board[i][j].moved;
+        let piece = classNames[pieceName];
+        board[i][j] = new piece(color, squareID, moved);
+      }
+    }
+  }
+};

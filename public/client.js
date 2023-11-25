@@ -1,10 +1,5 @@
 import { Timer } from "./timer.js";
-import {
-  startGame,
-  renderBoard,
-  updateBoard,
-  rotateChessboard,
-} from "./index.js";
+import { startGame, renderBoard, updateBoard } from "./index.js";
 import * as Pieces from "./pieces.js";
 
 let time = localStorage.getItem("time");
@@ -17,14 +12,6 @@ let currentTimer;
 let currentTimerElement;
 let timerInterval;
 let playerColor;
-let classNames = {
-  pawn: Pieces.Pawn,
-  knight: Pieces.Knight,
-  bishop: Pieces.Bishop,
-  rook: Pieces.Rook,
-  queen: Pieces.Queen,
-  king: Pieces.King,
-};
 
 let createTimers = (color) => {
   if (color == "white") {
@@ -110,20 +97,8 @@ socket.on("connect", () => {
   });
 
   socket.on("getBoard", (board) => {
-    for (let i = 0; i < 8; i++) {
-      for (let j = 0; j < 8; j++) {
-        if (board[i][j] != "EMPTY") {
-          debugger;
-          let pieceName = board[i][j].name;
-          let color = board[i][j].color;
-          let squareID = board[i][j].squareID;
-          let moved = board[i][j].moved;
-          let piece = classNames[pieceName];
-          board[i][j] = new piece(color, squareID, moved);
-        }
-      }
-    }
-    updateBoard(rotateChessboard(board));
+    Pieces.deserializeBoard(board);
+    updateBoard(board);
     renderBoard();
   });
 

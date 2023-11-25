@@ -35,7 +35,7 @@ let squareClick = (e) => {
       if (selectedPieceColor == playerColor) {
         square.style.border = "3px solid green";
         selectedPiece = currentPiece;
-        selectedPieceSquareId = square.id;
+        selectedPieceSquareId = parseInt(square.id);
       }
     }
   } else {
@@ -47,11 +47,6 @@ let squareClick = (e) => {
         row = Math.floor(selectedPieceSquareId / 8);
         column = selectedPieceSquareId % 8;
         targetSquareId = parseInt(currentPiece.parentNode.id);
-        if (playerColor == "black") {
-          row = 7 - row;
-          column = 7 - column;
-          targetSquareId = 63 - targetSquareId;
-        }
         if (board[row][column].moveTo(targetSquareId, board)) {
           selectedPiece = board[row][column];
           board[row][column] = "EMPTY";
@@ -64,23 +59,28 @@ let squareClick = (e) => {
       } else {
         square.style.border = "3px solid green";
         selectedPiece = currentPiece;
-        selectedPieceSquareId = square.id;
+        selectedPieceSquareId = parseInt(square.id);
       }
     } else {
-      debugger;
       row = Math.floor(selectedPieceSquareId / 8);
       column = selectedPieceSquareId % 8;
       targetSquareId = parseInt(square.id);
-      if (playerColor == "black") {
-        row = 7 - row;
-        column = 7 - column;
-        targetSquareId = 63 - targetSquareId;
-      }
       if (board[row][column].moveTo(targetSquareId, board)) {
         selectedPiece = board[row][column];
         board[row][column] = "EMPTY";
         board[Math.floor(targetSquareId / 8)][targetSquareId % 8] =
           selectedPiece;
+        if (selectedPiece.name == "king") {
+          if (targetSquareId == selectedPieceSquareId - 2) {
+            board[row][column - 1] = board[row][0];
+            board[row][column - 1].squareID = row * 8 + column - 1;
+            board[row][0] = "EMPTY";
+          } else if (targetSquareId == selectedPieceSquareId + 2) {
+            board[row][column + 1] = board[row][7];
+            board[row][column + 1].squareID = row * 8 + column + 1;
+            board[row][7] = "EMPTY";
+          }
+        }
         socket.emit("sendBoard", board);
         selectedPiece = null;
         renderBoard();
@@ -91,14 +91,10 @@ let squareClick = (e) => {
 
 let renderBoard = () => {
   clearBoard();
-  console.log("RENDERING", board);
   for (let i = 0; i < 8; i++) {
     for (let j = 0; j < 8; j++) {
       if (board[i][j] != "EMPTY") {
-        let squareID = (i * 8 + j).toString();
-        if (playerColor == "black") {
-          squareID = 63 - squareID;
-        }
+        let squareID = board[i][j].squareID.toString();
         let square = document.getElementById(squareID);
         let color = board[i][j].color;
         let piece = board[i][j].name;
@@ -124,15 +120,6 @@ let clearBoard = () => {
   }
 };
 
-let rotateChessboard = (board) => {
-  console.log("ORIGINAL", board);
-  const reversedRows = board.slice().reverse();
-  const rotatedBoard = reversedRows.map((row) => row.slice().reverse());
-
-  console.log("ROTATED", rotatedBoard);
-  return rotatedBoard;
-};
-
 let updateBoard = (newBoard) => {
   board = newBoard;
 };
@@ -153,11 +140,7 @@ let startGame = () => {
       chessboard.appendChild(square);
     }
   }
-
-  if (playerColor == "black") {
-    updateBoard(rotateChessboard(board));
-  }
   renderBoard();
 };
 
-export { startGame, renderBoard, updateBoard, rotateChessboard };
+export { startGame, renderBoard, updateBoard };
