@@ -12,6 +12,7 @@ let currentTimer;
 let currentTimerElement;
 let timerInterval;
 let playerColor;
+let promotionRow = 0;
 
 let createTimers = (color) => {
   if (color == "white") {
@@ -91,6 +92,9 @@ socket.on("connect", () => {
 
   socket.on("gameStart", (color) => {
     playerColor = color;
+    if (color == "black") {
+      promotionRow = 7;
+    }
     let [timerWhite, timerBlack] = createTimers(color);
     startGame();
     // changeTimers();
@@ -105,4 +109,4 @@ socket.on("connect", () => {
   socket.on("timeSync", () => {});
 });
 
-export { socket, playerColor };
+export { socket, playerColor, promotionRow };

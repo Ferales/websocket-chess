@@ -135,8 +135,8 @@ export class Piece {
 }
 
 export class Pawn extends Piece {
-  constructor(color, squareID) {
-    super(color, squareID);
+  constructor(color, squareID, moved = false) {
+    super(color, squareID, moved);
     this.name = "pawn";
   }
 
@@ -174,8 +174,8 @@ export class Pawn extends Piece {
 }
 
 export class Knight extends Piece {
-  constructor(color, squareID) {
-    super(color, squareID);
+  constructor(color, squareID, moved = false) {
+    super(color, squareID, moved);
     this.name = "knight";
   }
 
@@ -216,8 +216,8 @@ export class Knight extends Piece {
 }
 
 export class Bishop extends Piece {
-  constructor(color, squareID) {
-    super(color, squareID);
+  constructor(color, squareID, moved = false) {
+    super(color, squareID, moved);
     this.name = "bishop";
   }
 
@@ -243,8 +243,8 @@ export class Bishop extends Piece {
 }
 
 export class Rook extends Piece {
-  constructor(color, squareID) {
-    super(color, squareID);
+  constructor(color, squareID, moved = false) {
+    super(color, squareID, moved);
     this.name = "rook";
   }
 
@@ -270,8 +270,8 @@ export class Rook extends Piece {
 }
 
 export class Queen extends Piece {
-  constructor(color, squareID) {
-    super(color, squareID);
+  constructor(color, squareID, moved = false) {
+    super(color, squareID, moved);
     this.name = "queen";
   }
 
@@ -301,8 +301,8 @@ export class Queen extends Piece {
 }
 
 export class King extends Piece {
-  constructor(color, squareID) {
-    super(color, squareID);
+  constructor(color, squareID, moved = false) {
+    super(color, squareID, moved);
     this.name = "king";
   }
 

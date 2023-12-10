@@ -1,6 +1,6 @@
 import * as Pieces from "./pieces.js";
 import * as Board from "./board.js";
-import { socket, playerColor } from "./client.js";
+import { socket, playerColor, promotionRow } from "./client.js";
 
 let chessboard = document.getElementById("chessboard");
 let currentPiece;
@@ -11,6 +11,7 @@ let selectedPieceColor;
 let row;
 let column;
 let mate;
+let popupElement = document.getElementById("popup");
 let board = new Board.Board().board;
 
 let resetBorders = () => {
@@ -51,15 +52,23 @@ let squareClick = (e) => {
         if (board[row][column].moveTo(targetSquareId, board)) {
           selectedPiece = board[row][column];
           board[row][column] = "EMPTY";
-          board[Math.floor(targetSquareId / 8)][targetSquareId % 8] =
-            selectedPiece;
-          mate = Pieces.Piece.hasGameEnded(board, playerColor);
-          if (mate) {
-            console.log(mate);
+          if (
+            selectedPiece.name == "pawn" &&
+            Math.floor(targetSquareId / 8) == promotionRow
+          ) {
+            openPopup();
+          } else {
+            board[Math.floor(targetSquareId / 8)][targetSquareId % 8] =
+              selectedPiece;
+
+            mate = Pieces.Piece.hasGameEnded(board, playerColor);
+            if (mate) {
+              console.log(mate);
+            }
+            socket.emit("sendBoard", board);
+            selectedPiece = "EMPTY";
+            renderBoard();
           }
-          socket.emit("sendBoard", board);
-          selectedPiece = "EMPTY";
-          renderBoard();
         }
       } else {
         square.style.border = "3px solid green";
@@ -73,26 +82,36 @@ let squareClick = (e) => {
       if (board[row][column].moveTo(targetSquareId, board)) {
         selectedPiece = board[row][column];
         board[row][column] = "EMPTY";
-        board[Math.floor(targetSquareId / 8)][targetSquareId % 8] =
-          selectedPiece;
-        if (selectedPiece.name == "king") {
-          if (targetSquareId == selectedPieceSquareId - 2) {
-            board[row][column - 1] = board[row][0];
-            board[row][column - 1].squareID = row * 8 + column - 1;
-            board[row][0] = "EMPTY";
-          } else if (targetSquareId == selectedPieceSquareId + 2) {
-            board[row][column + 1] = board[row][7];
-            board[row][column + 1].squareID = row * 8 + column + 1;
-            board[row][7] = "EMPTY";
+        if (
+          selectedPiece.name == "pawn" &&
+          Math.floor(targetSquareId / 8) == promotionRow
+        ) {
+          openPopup();
+        } else {
+          board[Math.floor(targetSquareId / 8)][targetSquareId % 8] =
+            selectedPiece;
+          board[Math.floor(targetSquareId / 8)][targetSquareId % 8] =
+            selectedPiece;
+          if (selectedPiece.name == "king") {
+            if (targetSquareId == selectedPieceSquareId - 2) {
+              board[row][column - 1] = board[row][0];
+              board[row][column - 1].squareID = row * 8 + column - 1;
+              board[row][0] = "EMPTY";
+            } else if (targetSquareId == selectedPieceSquareId + 2) {
+              board[row][column + 1] = board[row][7];
+              board[row][column + 1].squareID = row * 8 + column + 1;
+              board[row][7] = "EMPTY";
+            }
           }
+
+          mate = Pieces.Piece.hasGameEnded(board, playerColor);
+          if (mate) {
+            console.log(mate);
+          }
+          socket.emit("sendBoard", board);
+          selectedPiece = null;
+          renderBoard();
         }
-        mate = Pieces.Piece.hasGameEnded(board, playerColor);
-        if (mate) {
-          console.log(mate);
-        }
-        socket.emit("sendBoard", board);
-        selectedPiece = null;
-        renderBoard();
       }
     }
   }
@@ -150,6 +169,44 @@ let startGame = () => {
     }
   }
   renderBoard();
+};
+
+let openPopup = () => {
+  document.body.style.pointerEvents = "none";
+  popupElement.style.display = "block";
+  let pieces = ["bishop", "knight", "rook", "queen"];
+  let images = document.querySelectorAll("#popup-content img");
+  for (let i = 0; i < images.length; i++) {
+    images[i].src = `./icons/${playerColor}_${pieces[i]}.png`;
+    images[i].addEventListener("click", promotePawn.bind(null, pieces[i]));
+  }
+};
+
+let promotePawn = (promotionPiece) => {
+  let classNames = {
+    knight: Pieces.Knight,
+    bishop: Pieces.Bishop,
+    rook: Pieces.Rook,
+    queen: Pieces.Queen,
+  };
+  let popupElement = document.getElementById("popup");
+  let piece = classNames[promotionPiece];
+  board[Math.floor(targetSquareId / 8)][targetSquareId % 8] = new piece(
+    playerColor,
+    targetSquareId,
+    true
+  );
+
+  mate = Pieces.Piece.hasGameEnded(board, playerColor);
+  if (mate) {
+    console.log(mate);
+  }
+  socket.emit("sendBoard", board);
+  selectedPiece = "EMPTY";
+  renderBoard();
+
+  document.body.style.pointerEvents = "auto";
+  popupElement.style.display = "none";
 };
 
 export { startGame, renderBoard, updateBoard };

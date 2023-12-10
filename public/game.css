@@ -111,3 +111,27 @@ body {
 .btn:hover {
   background-color: #555;
 }
+
+#popup {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 1;
+  transform: translate(-50%, -50%);
+  background-color: rgba(255, 255, 255, 0.35);
+  padding: 10px;
+  border: 1px solid #ddd;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  pointer-events: auto;
+}
+
+#popup-content img {
+  transform: scale(0.4);
+  margin-right: -30px;
+}
+
+#popup-content {
+  display: flex;
+  pointer-events: all;
+}
