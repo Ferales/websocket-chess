@@ -10,6 +10,7 @@ let targetSquareId;
 let selectedPieceColor;
 let row;
 let column;
+let mate;
 let board = new Board.Board().board;
 
 let resetBorders = () => {
@@ -52,6 +53,10 @@ let squareClick = (e) => {
           board[row][column] = "EMPTY";
           board[Math.floor(targetSquareId / 8)][targetSquareId % 8] =
             selectedPiece;
+          mate = Pieces.Piece.hasGameEnded(board, playerColor);
+          if (mate) {
+            console.log(mate);
+          }
           socket.emit("sendBoard", board);
           selectedPiece = "EMPTY";
           renderBoard();
@@ -80,6 +85,10 @@ let squareClick = (e) => {
             board[row][column + 1].squareID = row * 8 + column + 1;
             board[row][7] = "EMPTY";
           }
+        }
+        mate = Pieces.Piece.hasGameEnded(board, playerColor);
+        if (mate) {
+          console.log(mate);
         }
         socket.emit("sendBoard", board);
         selectedPiece = null;

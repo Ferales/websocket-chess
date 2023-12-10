@@ -7,8 +7,7 @@ export class Piece {
     this.name;
   }
 
-  static checkForCheck(board, color) {
-    let king;
+  static findKing(board, color) {
     for (let i = 0; i < 8; i++) {
       for (let j = 0; j < 8; j++) {
         if (
@@ -16,11 +15,14 @@ export class Piece {
           board[i][j].name == "king" &&
           board[i][j].color == color
         ) {
-          king = board[i][j];
-          break;
+          return board[i][j];
         }
       }
     }
+  }
+
+  static checkForCheck(board, color) {
+    let king = Piece.findKing(board, color);
     for (let i = 0; i < 8; i++) {
       for (let j = 0; j < 8; j++) {
         if (board[i][j] != "EMPTY" && board[i][j].color != color) {
@@ -39,20 +41,35 @@ export class Piece {
     return false;
   }
 
+  static hasGameEnded(board, color) {
+    let opponentsColor = color == "white" ? "black" : "white";
+    let check = false;
+    if (Piece.checkForCheck(board, opponentsColor)) {
+      check = true;
+    }
+    for (let i = 0; i < 8; i++) {
+      for (let j = 0; j < 8; j++) {
+        if (board[i][j] != "EMPTY" && board[i][j].color != color) {
+          let piece = board[i][j];
+          if (piece.name == "king") {
+            piece.calculateLegalMoves(board, false);
+          } else {
+            piece.calculateLegalMoves(board);
+          }
+          piece.filterLegalSquares(board);
+          if (piece.legalMoves.length > 0) {
+            return false;
+          }
+        }
+      }
+    }
+    return check ? "checkmate" : "stalemate";
+  }
+
   moveTo(squareID, board) {
     this.calculateLegalMoves(board);
+    this.filterLegalSquares(board);
     if (this.legalMoves.includes(squareID)) {
-      let tmpBoard = structuredClone(board);
-      deserializeBoard(tmpBoard);
-      let checkingRow = Math.floor(squareID / 8);
-      let checkingColumn = squareID % 8;
-      let [row, column] = this.getIndexes();
-      tmpBoard[checkingRow][checkingColumn] = tmpBoard[row][column];
-      tmpBoard[checkingRow][checkingColumn].squareID = squareID;
-      tmpBoard[row][column] = "EMPTY";
-      if (Piece.checkForCheck(tmpBoard, this.color)) {
-        return false;
-      }
       this.squareID = squareID;
       this.moved = true;
       for (let i = 0; i < 8; i++) {
@@ -97,6 +114,23 @@ export class Piece {
       column += columnOffset;
     }
     return legalSquares;
+  }
+
+  filterLegalSquares(board) {
+    for (let i = this.legalMoves.length - 1; i >= 0; i--) {
+      let checkingSquare = this.legalMoves[i];
+      let tmpBoard = structuredClone(board);
+      deserializeBoard(tmpBoard);
+      let checkingRow = Math.floor(checkingSquare / 8);
+      let checkingColumn = checkingSquare % 8;
+      let [row, column] = this.getIndexes();
+      tmpBoard[checkingRow][checkingColumn] = tmpBoard[row][column];
+      tmpBoard[checkingRow][checkingColumn].squareID = checkingSquare;
+      tmpBoard[row][column] = "EMPTY";
+      if (Piece.checkForCheck(tmpBoard, this.color)) {
+        this.legalMoves.splice(i, 1);
+      }
+    }
   }
 }
 
@@ -305,7 +339,6 @@ export class King extends Piece {
       }
     }
     if (!this.moved && calculateCastle) {
-      debugger;
       let rookRow = this.color == "white" ? 7 : 0;
       let tmpBoard = structuredClone(board);
       deserializeBoard(tmpBoard);
