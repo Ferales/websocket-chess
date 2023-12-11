@@ -154,6 +154,7 @@ let updateBoard = (newBoard) => {
 
 let startGame = () => {
   console.log(playerColor);
+  document.getElementById("loader-container").style.display = "none";
   for (let i = 0; i < 8; i++) {
     for (let j = 0; j < 8; j++) {
       let square = document.createElement("div");

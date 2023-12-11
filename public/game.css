@@ -9,10 +9,9 @@ body {
 }
 
 #chessboard {
+  position: relative;
   width: 40%;
   border: solid black 1px;
-  margin-left: 30%;
-  /* margin-top: 2%; */
   aspect-ratio: 1 / 1;
   display: grid;
   grid-template-rows: repeat(8, 12.5%);
@@ -43,6 +42,7 @@ body {
 
 #main {
   display: flex;
+  justify-content: center;
   margin-top: 3vw;
 }
 .timer {
@@ -134,4 +134,41 @@ body {
 #popup-content {
   display: flex;
   pointer-events: all;
+}
+
+#loader-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #000;
+  font-size: 28px;
+  text-align: center;
+}
+
+#loader {
+  display: inline-block;
+  width: 80px;
+  height: 80px;
+}
+#loader {
+  content: " ";
+  display: block;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 6px solid #fff;
+  border-color: #fff transparent #fff transparent;
+  animation: lds-dual-ring 2s linear infinite;
+}
+@keyframes lds-dual-ring {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
