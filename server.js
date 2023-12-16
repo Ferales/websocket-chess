@@ -3,7 +3,8 @@ const http = require("http");
 const socketIO = require("socket.io");
 const path = require("path");
 const { v4: uuidv4 } = require("uuid");
-const { SessionStore } = require("./sessionStore.js");
+const { SessionStoreage } = require("./sessionStoreage.js");
+// const { a } = require("./serverTimerHelpers.js");
 
 const app = express();
 app.use(express.static(path.join(__dirname, "public")));
@@ -11,7 +12,7 @@ app.use(express.static(path.join(__dirname, "public")));
 const server = http.createServer(app);
 const io = socketIO(server);
 
-const sessionStore = new SessionStore();
+const sessionStore = new SessionStoreage();
 
 const PORT = 3000;
 
@@ -88,26 +89,18 @@ io.on("connection", (socket, data) => {
     io.to(players[0]).emit("getBoard", board);
   });
 
-  // Handle user request to join a room
-  // socket.on("joinRoom", (data) => {
-  //   const availableRoom = rooms.find((roomID) => {
-  //     return !io.sockets.adapter.rooms.get(roomID);
-  //   });
-
-  //   if (availableRoom) {
-  //     socket.join(availableRoom);
-  //     users[socket.id] = { roomID: availableRoom, socket };
-  //     socket.emit("joinedRoom", { roomID: availableRoom });
-  //   } else {
-  //     socket.emit("noAvailableRooms");
-  //   }
-  // });
+  socket.on("gameOver", (message, board) => {
+    let players = getConnectedClients(socket.roomID);
+    let index = players.indexOf(socket.id);
+    players.splice(index, 1);
+    io.to(players[0]).emit("gameOver", message, board);
+  });
 
   // Handle user disconnect
   socket.on("disconnect", async () => {
     console.log("A user disconnected:", socket.id);
-    const matchingSockets = await io.in(socket.userID).allSockets();
-    const isDisconnected = matchingSockets.size === 0;
+    const matchingSockets = await io.in(socket.roomID).allSockets();
+    const isDisconnected = matchingSockets.size == 0;
     if (isDisconnected) {
       // update the connection status of the session
       sessionStore.saveSession(socket.sessionID, {
@@ -122,7 +115,7 @@ server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
 
-function createRoom(socketID, data) {
+let createRoom = (socketID, data) => {
   const roomID = `room-${socketID}`;
   let [time, increment] = data;
   let room = {
@@ -132,9 +125,9 @@ function createRoom(socketID, data) {
     full: false,
   };
   return room;
-}
+};
 
-function startGame(room) {
+let startGame = (room) => {
   const roomClients = getConnectedClients(room.roomID);
   let player1Color, player2Color;
   if (Math.random() < 0.5) {
@@ -150,9 +143,9 @@ function startGame(room) {
 
   io.to(roomClients[1]).emit("gameStart", player2Color);
   roomClients[1].color = player2Color;
-}
+};
 
-function getConnectedClients(roomID) {
+let getConnectedClients = (roomID) => {
   const roomClients = io.sockets.adapter.rooms.get(roomID);
   return Array.from(roomClients);
-}
+};

@@ -1,6 +1,7 @@
 import * as Pieces from "./pieces.js";
 import * as Board from "./board.js";
 import { socket, playerColor, promotionRow } from "./client.js";
+import * as TimerHandler from "./timerHelpers.js";
 
 let chessboard = document.getElementById("chessboard");
 let currentPiece;
@@ -63,10 +64,13 @@ let squareClick = (e) => {
 
             mate = Pieces.Piece.hasGameEnded(board, playerColor);
             if (mate) {
-              console.log(mate);
+              debugger;
+              gameOver(mate);
+            } else {
+              TimerHandler.changeTimers();
+              socket.emit("sendBoard", board);
             }
-            socket.emit("sendBoard", board);
-            selectedPiece = "EMPTY";
+            selectedPiece = null;
             renderBoard();
           }
         }
@@ -106,9 +110,11 @@ let squareClick = (e) => {
 
           mate = Pieces.Piece.hasGameEnded(board, playerColor);
           if (mate) {
-            console.log(mate);
+            gameOver(mate);
+          } else {
+            TimerHandler.changeTimers();
+            socket.emit("sendBoard", board);
           }
-          socket.emit("sendBoard", board);
           selectedPiece = null;
           renderBoard();
         }
@@ -155,6 +161,9 @@ let updateBoard = (newBoard) => {
 let startGame = () => {
   console.log(playerColor);
   document.getElementById("loader-container").style.display = "none";
+
+  TimerHandler.createTimers(playerColor);
+
   for (let i = 0; i < 8; i++) {
     for (let j = 0; j < 8; j++) {
       let square = document.createElement("div");
@@ -200,14 +209,44 @@ let promotePawn = (promotionPiece) => {
 
   mate = Pieces.Piece.hasGameEnded(board, playerColor);
   if (mate) {
-    console.log(mate);
+    gameOver(mate);
+  } else {
+    TimerHandler.changeTimers();
+    socket.emit("sendBoard", board);
   }
-  socket.emit("sendBoard", board);
-  selectedPiece = "EMPTY";
+  selectedPiece = null;
   renderBoard();
 
   document.body.style.pointerEvents = "auto";
   popupElement.style.display = "none";
 };
 
-export { startGame, renderBoard, updateBoard };
+let gameOver = (endCondition) => {
+  TimerHandler.stopTimers();
+  let message;
+  let winnerMessage;
+  switch (endCondition) {
+    case "checkmate":
+      winnerMessage = playerColor == "white" ? "białych" : "czarnych";
+      message = `Mat - zwycięstwo ${winnerMessage}`;
+      break;
+    case "stalemate":
+      message = "Pat";
+      break;
+    case "outOfTime":
+      winnerMessage = playerColor == "white" ? "czarnych" : "białych";
+      message = `Koniec czasu - zwycięstwo ${winnerMessage}`;
+      break;
+    case "surrender":
+      let surrenderMessage = playerColor == "white" ? "Białe" : "Czarne";
+      winnerMessage = playerColor == "white" ? "białych" : "czarnych";
+      message = `${surrenderMessage} poddały partię - zwycięstwo ${winnerMessage}`;
+      break;
+    case "draw":
+      message = "Remis";
+  }
+  console.log(message);
+  socket.emit("gameOver", message, board);
+};
+
+export { startGame, renderBoard, updateBoard, gameOver };

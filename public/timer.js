@@ -4,6 +4,7 @@ export class Timer {
     this.startingTime = null;
     this.referenceTime = null;
     this.intervalId = null;
+    this.started = false;
   }
 
   start() {
@@ -13,6 +14,7 @@ export class Timer {
       const elapsedTime = Date.now() - this.referenceTime;
       this.time = this.startingTime - elapsedTime;
     }, 100);
+    this.started = true;
   }
 
   stop() {
@@ -20,6 +22,7 @@ export class Timer {
   }
 
   addTime(increment) {
+    increment *= 1000;
     this.time += increment;
   }
 }
