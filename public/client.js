@@ -32,7 +32,7 @@ socket.on("connect", () => {
     socket.userID = userID;
   });
 
-  socket.emit("gameRequest", (time, increment));
+  socket.emit("gameRequest", [time, increment]);
 
   socket.on("gameStart", (color) => {
     playerColor = color;

@@ -1,38 +1,62 @@
-const Timer = require("./public/timer");
+class Timer {
+  constructor(time) {
+    this.time = time * 60 * 1000;
+    this.startingTime = null;
+    this.referenceTime = null;
+    this.intervalId = null;
+    this.started = false;
+  }
 
-let serverTimers = {
-  timerWhite: null,
-  timerBlack: null,
-  currentTimer: null,
-  timerInterval: null,
+  start() {
+    this.startingTime = this.time;
+    this.referenceTime = Date.now();
+    this.intervalId = setInterval(() => {
+      const elapsedTime = Date.now() - this.referenceTime;
+      this.time = this.startingTime - elapsedTime;
+    }, 100);
+    this.started = true;
+  }
 
-  createTimers: (time) => {
-    serverTimers.timerWhite = new Timer(time);
-    serverTimers.timerBlack = new Timer(time);
-    serverTimers.currentTimer = serverTimers.timerWhite;
-  },
+  stop() {
+    clearInterval(this.intervalId);
+  }
 
-  changeTimers: (increment) => {
-    serverTimers.currentTimer.stop();
-    if (serverTimers.currentTimer.started) {
-      serverTimers.currentTimer.addTime(increment);
+  addTime(increment) {
+    increment *= 1000;
+    this.time += increment;
+  }
+}
+
+class RoomTimers {
+  constructor(time, increment) {
+    this.timerWhite = new Timer(time);
+    this.timerBlack = new Timer(time);
+    this.currentTimer = this.timerWhite;
+    this.timerInterval = null;
+    this.increment = increment;
+  }
+
+  changeTimers() {
+    this.currentTimer.stop();
+    if (this.currentTimer.started) {
+      this.currentTimer.addTime(this.increment);
     }
-    clearInterval(serverTimers.timerInterval);
-    if (serverTimers.currentTimer === serverTimers.timerBlack) {
-      serverTimers.currentTimer = serverTimers.timerWhite;
+    clearInterval(this.timerInterval);
+    if (this.currentTimer === this.timerBlack) {
+      this.currentTimer = this.timerWhite;
     } else {
-      serverTimers.currentTimer = serverTimers.timerBlack;
+      this.currentTimer = this.timerBlack;
     }
-    serverTimers.currentTimer.start();
-  },
+    this.currentTimer.start();
+  }
 
-  stopTimers: () => {
-    serverTimers.timerBlack.stop();
-    serverTimers.timerWhite.stop();
-    clearInterval(serverTimers.timerInterval);
-  },
-};
+  stopTimers() {
+    this.timerBlack.stop();
+    this.timerWhite.stop();
+    clearInterval(this.timerInterval);
+  }
+}
 
 module.exports = {
-  serverTimers,
+  RoomTimers,
 };

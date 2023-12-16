@@ -4,7 +4,7 @@ const socketIO = require("socket.io");
 const path = require("path");
 const { v4: uuidv4 } = require("uuid");
 const { SessionStoreage } = require("./sessionStoreage.js");
-// const { a } = require("./serverTimerHelpers.js");
+const { RoomTimers } = require("./serverTimerHelpers.js");
 
 const app = express();
 app.use(express.static(path.join(__dirname, "public")));
@@ -12,12 +12,14 @@ app.use(express.static(path.join(__dirname, "public")));
 const server = http.createServer(app);
 const io = socketIO(server);
 
-const sessionStore = new SessionStoreage();
+const sessionStoreage = new SessionStoreage();
 
 const PORT = 3000;
 
-const users = {};
 const rooms = [];
+
+let time;
+let increment;
 
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "homePage.html"));
@@ -30,11 +32,13 @@ app.get("/game", (req, res) => {
 io.use((socket, next) => {
   const sessionID = socket.handshake.auth.sessionID;
   if (sessionID) {
-    const session = sessionStore.findSession(sessionID);
+    const session = sessionStoreage.findSession(sessionID);
     if (session) {
       socket.sessionID = sessionID;
       socket.userID = session.userID;
-      socket.inGame = session.inGame;
+      socket.roomID = session.roomID;
+
+      socket.join(session.roomID);
       return next();
     }
   }
@@ -58,22 +62,23 @@ io.on("connection", (socket, data) => {
     if (socket.inGame) {
       return;
     }
-    let [time, increment] = data;
+    [time, increment] = data;
     console.log(rooms);
     let availableRoom = rooms.find(
       (room) => room.time == time && room.increment == increment && !room.full
     );
     if (!availableRoom) {
       let room = createRoom(socket.userID, data);
-      //socket.emit("roomCreated", room.roomID);
       console.log("Room created");
       rooms.push(room);
       socket.join(room.roomID);
+      socket.emit("setRoomID", room.roomID);
       socket.roomID = room.roomID;
       socket.inGame = true;
     } else {
       availableRoom.full = true;
       socket.join(availableRoom.roomID);
+      socket.emit("setRoomID", availableRoom.roomID);
       socket.roomID = availableRoom.roomID;
       socket.inGame = true;
       console.log("STARTING GAME");
@@ -86,6 +91,11 @@ io.on("connection", (socket, data) => {
     let players = getConnectedClients(socket.roomID);
     let index = players.indexOf(socket.id);
     players.splice(index, 1);
+
+    let room = rooms.find((room) => room.roomID == socket.roomID);
+    room.board = board;
+    room.timers.changeTimers();
+
     io.to(players[0]).emit("getBoard", board);
   });
 
@@ -105,7 +115,7 @@ io.on("connection", (socket, data) => {
       // update the connection status of the session
       sessionStore.saveSession(socket.sessionID, {
         userID: socket.userID,
-        inGame: socket.inGame,
+        roomID: socket.roomID,
       });
     }
   });
@@ -123,6 +133,8 @@ let createRoom = (socketID, data) => {
     time: time,
     increment: increment,
     full: false,
+    board: null,
+    timers: new RoomTimers(parseInt(time), parseInt(increment)),
   };
   return room;
 };
