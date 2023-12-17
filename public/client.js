@@ -12,27 +12,25 @@ const socket = io("http://localhost:3000", {
   autoConnect: false,
 });
 
-const sessionID = localStorage.getItem("sessionID");
+const userID = localStorage.getItem("userID");
+const roomID = localStorage.getItem("roomID");
 
-if (sessionID) {
-  socket.auth = { sessionID };
+if (userID && roomID) {
+  console.log(userID);
+  socket.auth = { userID, roomID };
 }
 
 socket.connect();
 
 socket.on("connect", () => {
-  // const socketID = socket.id;
-  // localStorage.setItem("socketID", socketID);
-  socket.on("session", ({ sessionID, userID }) => {
-    // attach the session ID to the next reconnection attempts
-    socket.auth = { sessionID };
-    // store it in the localStorage
-    localStorage.setItem("sessionID", sessionID);
-    // save the ID of the user
-    socket.userID = userID;
-  });
+  if (!socket.roomID) {
+    socket.emit("gameRequest", [time, increment]);
+  }
 
-  socket.emit("gameRequest", [time, increment]);
+  socket.on("saveIDs", (userID, roomID) => {
+    localStorage.setItem("userID", userID);
+    localStorage.setItem("roomID", roomID);
+  });
 
   socket.on("gameStart", (color) => {
     playerColor = color;
@@ -57,7 +55,30 @@ socket.on("connect", () => {
     console.log(message);
   });
 
-  socket.on("timeSync", () => {});
+  socket.on("outOfTime", (message) => {
+    TimerHandler.stopTimers();
+    console.log(message);
+  });
+
+  socket.on("clearIDs", () => {
+    localStorage.clear();
+  });
+
+  socket.on(
+    "reconnect",
+    (board, timerWhite, timerBlack, currentTimerColor, color, onMove) => {
+      playerColor = color;
+      Pieces.deserializeBoard(board);
+      updateBoard(board, { reconnectOnMove: onMove });
+      TimerHandler.restoreTimers(
+        playerColor,
+        timerWhite,
+        timerBlack,
+        currentTimerColor
+      );
+      startGame(true);
+    }
+  );
 });
 
 export { socket, playerColor, promotionRow };

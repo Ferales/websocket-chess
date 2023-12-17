@@ -307,7 +307,7 @@ export class King extends Piece {
   }
 
   calculateLegalMoves(board, calculateCastle = true) {
-    if (this.legalMoves.length) {
+    if (this.legalMoves.length && !calculateCastle) {
       return;
     }
     let legalSquares = [];

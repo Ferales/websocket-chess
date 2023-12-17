@@ -3,7 +3,6 @@ const http = require("http");
 const socketIO = require("socket.io");
 const path = require("path");
 const { v4: uuidv4 } = require("uuid");
-const { SessionStoreage } = require("./sessionStoreage.js");
 const { RoomTimers } = require("./serverTimerHelpers.js");
 
 const app = express();
@@ -12,11 +11,9 @@ app.use(express.static(path.join(__dirname, "public")));
 const server = http.createServer(app);
 const io = socketIO(server);
 
-const sessionStoreage = new SessionStoreage();
-
 const PORT = 3000;
 
-const rooms = [];
+let rooms = [];
 
 let time;
 let increment;
@@ -29,95 +26,92 @@ app.get("/game", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "game.html"));
 });
 
-io.use((socket, next) => {
-  const sessionID = socket.handshake.auth.sessionID;
-  if (sessionID) {
-    const session = sessionStoreage.findSession(sessionID);
-    if (session) {
-      socket.sessionID = sessionID;
-      socket.userID = session.userID;
-      socket.roomID = session.roomID;
+io.on("connection", (socket) => {
+  if (Object.keys(socket.handshake.auth).length != 0) {
+    socket.userID = socket.handshake.auth.userID;
+    socket.roomID = socket.handshake.auth.roomID;
+    let room = rooms.find((room) => room.roomID == socket.roomID);
+    if (room) {
+      let roomPlayers = getConnectedPlayers(socket.roomID);
+      let disconnectedPlayer = roomPlayers.find(
+        (player) => player.userID == socket.userID
+      );
+      socket.color = disconnectedPlayer.color;
+      socket.inGame = true;
+      socket.onMove = disconnectedPlayer.onMove;
 
-      socket.join(session.roomID);
-      return next();
+      let currentTimerColor =
+        room.timers.currentTimer == room.timers.timerWhite ? "white" : "black";
+
+      room.players = room.players.filter(
+        (player) => player.userID != socket.userID
+      );
+
+      socket.join(room.roomID);
+      room.players.push(socket);
+
+      io.to(socket.id).emit(
+        "reconnect",
+        room.board,
+        room.timers.timerWhite.time,
+        room.timers.timerBlack.time,
+        currentTimerColor,
+        socket.color,
+        socket.onMove
+      );
     }
+  } else {
+    socket.userID = uuidv4();
   }
 
-  socket.sessionID = uuidv4();
-  socket.userID = uuidv4();
-  console.log(socket.userID);
-  next();
-});
-
-io.on("connection", (socket, data) => {
-  console.log("A user connected:", socket.id, socket.userID);
-
-  socket.emit("session", {
-    sessionID: socket.sessionID,
-    userID: socket.userID,
-  });
-
   socket.on("gameRequest", (data) => {
-    console.log(rooms);
     if (socket.inGame) {
       return;
     }
     [time, increment] = data;
-    console.log(rooms);
     let availableRoom = rooms.find(
       (room) => room.time == time && room.increment == increment && !room.full
     );
     if (!availableRoom) {
-      let room = createRoom(socket.userID, data);
+      let room = createRoom(data);
       console.log("Room created");
       rooms.push(room);
       socket.join(room.roomID);
-      socket.emit("setRoomID", room.roomID);
+      room.players.push(socket);
       socket.roomID = room.roomID;
       socket.inGame = true;
     } else {
       availableRoom.full = true;
       socket.join(availableRoom.roomID);
-      socket.emit("setRoomID", availableRoom.roomID);
+      availableRoom.players.push(socket);
       socket.roomID = availableRoom.roomID;
       socket.inGame = true;
       console.log("STARTING GAME");
       startGame(availableRoom);
     }
-    //users[socket.id] = { roomID, socket };
   });
 
   socket.on("sendBoard", (board) => {
-    let players = getConnectedClients(socket.roomID);
-    let index = players.indexOf(socket.id);
-    players.splice(index, 1);
+    let players = getConnectedPlayers(socket.roomID);
+
+    for (let player of players) {
+      player.onMove = !player.onMove;
+    }
+
+    let player = players.find((player) => player.id != socket.id);
+    io.to(player.id).emit("getBoard", board);
 
     let room = rooms.find((room) => room.roomID == socket.roomID);
     room.board = board;
     room.timers.changeTimers();
-
-    io.to(players[0]).emit("getBoard", board);
   });
 
   socket.on("gameOver", (message, board) => {
-    let players = getConnectedClients(socket.roomID);
-    let index = players.indexOf(socket.id);
-    players.splice(index, 1);
-    io.to(players[0]).emit("gameOver", message, board);
-  });
+    let players = getConnectedPlayers(socket.roomID);
+    let player = players.find((player) => player.id != socket.id);
+    io.to(player.id).emit("gameOver", message, board);
 
-  // Handle user disconnect
-  socket.on("disconnect", async () => {
-    console.log("A user disconnected:", socket.id);
-    const matchingSockets = await io.in(socket.roomID).allSockets();
-    const isDisconnected = matchingSockets.size == 0;
-    if (isDisconnected) {
-      // update the connection status of the session
-      sessionStore.saveSession(socket.sessionID, {
-        userID: socket.userID,
-        roomID: socket.roomID,
-      });
-    }
+    clearSession(socket.roomID);
   });
 });
 
@@ -125,8 +119,8 @@ server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
 
-let createRoom = (socketID, data) => {
-  const roomID = `room-${socketID}`;
+let createRoom = (data) => {
+  const roomID = `room-${uuidv4()}`;
   let [time, increment] = data;
   let room = {
     roomID: roomID,
@@ -134,13 +128,19 @@ let createRoom = (socketID, data) => {
     increment: increment,
     full: false,
     board: null,
-    timers: new RoomTimers(parseInt(time), parseInt(increment)),
+    timers: new RoomTimers(
+      parseInt(time),
+      parseInt(increment),
+      outOfTimeHandler,
+      roomID
+    ),
+    players: [],
   };
   return room;
 };
 
 let startGame = (room) => {
-  const roomClients = getConnectedClients(room.roomID);
+  const players = getConnectedPlayers(room.roomID);
   let player1Color, player2Color;
   if (Math.random() < 0.5) {
     player1Color = "white";
@@ -150,14 +150,48 @@ let startGame = (room) => {
     player2Color = "white";
   }
 
-  io.to(roomClients[0]).emit("gameStart", player1Color);
-  roomClients[0].color = player1Color;
+  io.to(players[0].id).emit("gameStart", player1Color);
+  players[0].color = player1Color;
 
-  io.to(roomClients[1]).emit("gameStart", player2Color);
-  roomClients[1].color = player2Color;
+  io.to(players[1].id).emit("gameStart", player2Color);
+  players[1].color = player2Color;
+
+  for (let player of players) {
+    io.to(player.id).emit("saveIDs", player.userID, player.roomID);
+    player.color == "white" ? (player.onMove = true) : (player.onMove = false);
+  }
 };
 
-let getConnectedClients = (roomID) => {
-  const roomClients = io.sockets.adapter.rooms.get(roomID);
-  return Array.from(roomClients);
+let outOfTimeHandler = (roomID, color) => {
+  let winner = color == "white" ? "czarnych" : "białych";
+  let message = `Koniec czasu - zwycięstwo ${winner}`;
+
+  outOfTIme(roomID, message);
+};
+
+let outOfTIme = (roomID, message) => {
+  let players = getConnectedPlayers(roomID);
+
+  for (let player of players) {
+    io.to(player.id).emit("outOfTime", message);
+  }
+
+  clearSession(roomID);
+};
+
+let clearSession = (roomID) => {
+  let players = getConnectedPlayers(roomID);
+  for (let player of players) {
+    player.userID = "";
+    player.roomID = "";
+    player.inGame = false;
+
+    io.to(player.id).emit("clearIDs");
+  }
+  rooms = rooms.filter((room) => room.roomID != roomID);
+};
+
+let getConnectedPlayers = (roomID) => {
+  let room = rooms.find((room) => room.roomID == roomID);
+  return room.players;
 };

@@ -13,6 +13,7 @@ let row;
 let column;
 let mate;
 let popupElement = document.getElementById("popup");
+let onMove = false;
 let board = new Board.Board().board;
 
 let resetBorders = () => {
@@ -25,6 +26,9 @@ let resetBorders = () => {
 };
 
 let squareClick = (e) => {
+  if (!onMove) {
+    return;
+  }
   resetBorders();
   let square = e.target;
   currentPiece = square.firstChild;
@@ -64,11 +68,11 @@ let squareClick = (e) => {
 
             mate = Pieces.Piece.hasGameEnded(board, playerColor);
             if (mate) {
-              debugger;
               gameOver(mate);
             } else {
               TimerHandler.changeTimers();
               socket.emit("sendBoard", board);
+              onMove = !onMove;
             }
             selectedPiece = null;
             renderBoard();
@@ -114,6 +118,7 @@ let squareClick = (e) => {
           } else {
             TimerHandler.changeTimers();
             socket.emit("sendBoard", board);
+            onMove = !onMove;
           }
           selectedPiece = null;
           renderBoard();
@@ -154,15 +159,24 @@ let clearBoard = () => {
   }
 };
 
-let updateBoard = (newBoard) => {
+let updateBoard = (newBoard, reconnectOptions) => {
   board = newBoard;
+  if (reconnectOptions) {
+    onMove = reconnectOptions["reconnectOnMove"];
+  } else {
+    onMove = !onMove;
+  }
 };
 
-let startGame = () => {
-  console.log(playerColor);
+let startGame = (recconect = false) => {
   document.getElementById("loader-container").style.display = "none";
 
-  TimerHandler.createTimers(playerColor);
+  if (!recconect) {
+    TimerHandler.createTimers(playerColor);
+    if (playerColor == "white") {
+      onMove = true;
+    }
+  }
 
   for (let i = 0; i < 8; i++) {
     for (let j = 0; j < 8; j++) {
@@ -213,6 +227,7 @@ let promotePawn = (promotionPiece) => {
   } else {
     TimerHandler.changeTimers();
     socket.emit("sendBoard", board);
+    onMove = !onMove;
   }
   selectedPiece = null;
   renderBoard();
@@ -232,10 +247,6 @@ let gameOver = (endCondition) => {
       break;
     case "stalemate":
       message = "Pat";
-      break;
-    case "outOfTime":
-      winnerMessage = playerColor == "white" ? "czarnych" : "białych";
-      message = `Koniec czasu - zwycięstwo ${winnerMessage}`;
       break;
     case "surrender":
       let surrenderMessage = playerColor == "white" ? "Białe" : "Czarne";

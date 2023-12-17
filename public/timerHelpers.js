@@ -1,5 +1,4 @@
 import { Timer } from "./timer.js";
-import { gameOver } from "./index.js";
 
 let time = localStorage.getItem("time");
 let increment = localStorage.getItem("increment");
@@ -12,19 +11,13 @@ let currentTimerElement;
 let timerInterval;
 
 export let createTimers = (color) => {
-  if (color == "white") {
-    timerWhiteElement = document.getElementsByClassName("timer-bottom")[0];
-    timerBlackElement = document.getElementsByClassName("timer-top")[0];
-  } else {
-    timerWhiteElement = document.getElementsByClassName("timer-top")[0];
-    timerBlackElement = document.getElementsByClassName("timer-bottom")[0];
-    timerBlackElement.innerHTML = `${time}:00`;
-  }
+  setTimerElements(color);
+
   timerWhiteElement.innerHTML = `${time}:00`;
   timerBlackElement.innerHTML = `${time}:00`;
 
-  timerWhite = new Timer(time);
-  timerBlack = new Timer(time);
+  timerWhite = new Timer(time * 1000 * 60);
+  timerBlack = new Timer(time * 1000 * 60);
 
   currentTimer = timerWhite;
 };
@@ -48,10 +41,54 @@ export let changeTimers = () => {
     if (currentTimer.time <= 0) {
       currentTimer.time = 0;
       stopTimers();
-      gameOver("outOfTime");
     }
     currentTimerElement.innerHTML = millisecondsToTimeString(currentTimer.time);
   }, 100);
+};
+
+export let stopTimers = () => {
+  timerBlack.stop();
+  timerWhite.stop();
+  clearInterval(timerInterval);
+};
+
+export let restoreTimers = (color, timeWhite, timeBlack, currentTimerColor) => {
+  setTimerElements(color);
+  debugger;
+
+  timerWhite = new Timer(timeWhite);
+  timerBlack = new Timer(timeBlack);
+
+  if (currentTimerColor == "white") {
+    timerWhite.start();
+    currentTimer = timerWhite;
+    currentTimerElement = timerWhiteElement;
+  } else {
+    timerBlack.start();
+    currentTimer = timerBlack;
+    currentTimerElement = timerBlackElement;
+  }
+
+  timerWhiteElement.innerHTML = millisecondsToTimeString(timeWhite);
+  timerBlackElement.innerHTML = millisecondsToTimeString(timeBlack);
+
+  timerInterval = setInterval(() => {
+    if (currentTimer.time <= 0) {
+      currentTimer.time = 0;
+      stopTimers();
+    }
+    currentTimerElement.innerHTML = millisecondsToTimeString(currentTimer.time);
+  }, 100);
+};
+
+let setTimerElements = (color) => {
+  if (color == "white") {
+    timerWhiteElement = document.getElementsByClassName("timer-bottom")[0];
+    timerBlackElement = document.getElementsByClassName("timer-top")[0];
+  } else {
+    timerWhiteElement = document.getElementsByClassName("timer-top")[0];
+    timerBlackElement = document.getElementsByClassName("timer-bottom")[0];
+  }
 };
 
 export let millisecondsToTimeString = (milliseconds) => {
@@ -65,10 +102,4 @@ export let millisecondsToTimeString = (milliseconds) => {
     .padStart(2, "0")}`;
 
   return formattedTime;
-};
-
-export let stopTimers = () => {
-  timerBlack.stop();
-  timerWhite.stop();
-  clearInterval(timerInterval);
 };

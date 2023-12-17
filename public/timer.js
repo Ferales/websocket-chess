@@ -1,6 +1,6 @@
 export class Timer {
   constructor(time) {
-    this.time = time * 60 * 1000;
+    this.time = time;
     this.startingTime = null;
     this.referenceTime = null;
     this.intervalId = null;
