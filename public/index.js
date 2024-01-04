@@ -2,7 +2,6 @@ import * as Pieces from "./pieces.js";
 import * as Board from "./board.js";
 import { socket, playerColor, promotionRow } from "./client.js";
 import * as TimerHandler from "./timerHelpers.js";
-import { Timer } from "./timer.js";
 
 let chessboard = document.getElementById("chessboard");
 let currentPiece;
@@ -15,6 +14,13 @@ let column;
 let mate;
 let onMove = false;
 let board = new Board.Board().board;
+
+if (
+  localStorage.getItem("time") == null ||
+  localStorage.getItem("increment") == null
+) {
+  window.location.href = "/";
+}
 
 let resetBorders = () => {
   for (let i = 0; i < 8; i++) {
@@ -241,7 +247,6 @@ let promotePawn = (promotionPiece) => {
 
 let gameOver = (endCondition) => {
   TimerHandler.stopTimers();
-  clearEventListeners();
   let message;
   let winnerMessage;
   switch (endCondition) {
@@ -254,13 +259,13 @@ let gameOver = (endCondition) => {
       break;
     case "surrender":
       let surrenderMessage = playerColor == "white" ? "Białe" : "Czarne";
-      winnerMessage = playerColor == "white" ? "białych" : "czarnych";
+      winnerMessage = playerColor == "white" ? "czarnych" : "białych";
       message = `${surrenderMessage} poddały partię - zwycięstwo ${winnerMessage}`;
       break;
     case "draw":
       message = "Remis";
   }
-  console.log(message);
+  clearElements(message);
   socket.emit("gameOver", message, board);
 };
 
@@ -280,6 +285,8 @@ let sendDrawRequest = () => {
 };
 
 let getDrawRequest = () => {
+  document.getElementById("drawRequest").style.display = "none";
+
   let drawButton = document.getElementById("draw");
   let drawOffer = document.getElementById("drawOffer");
 
@@ -306,26 +313,26 @@ let setEventListeners = () => {
   });
 
   document.getElementById("reject-draw").addEventListener("click", () => {
-    let drawButton = document.getElementById("draw");
-    let drawOptions = document.getElementById("draw-options");
+    document.getElementById("drawOffer").style.display = "none";
+    document.getElementById("draw").style.display = "flex";
+  });
 
-    drawButton.style.display = "flex";
-    drawOptions.style.display = "none";
+  document.getElementById("goBack").addEventListener("click", () => {
+    window.location.href = "/";
   });
 };
 
-let clearEventListeners = () => {
-  let elementsIds = ["surrender", "draw", "accept-draw", "reject-draw"];
+let clearElements = (message) => {
+  let elementsIds = ["surrender", "draw", "drawOffer", "drawRequest"];
   for (let elementId of elementsIds) {
     let element = document.getElementById(elementId);
+    element.style.display = "none";
     element.replaceWith(element.cloneNode(true));
   }
+  onMove = false;
+
+  document.getElementById("gameOverElements").style.display = "flex";
+  document.getElementById("gameOverMessage").innerHTML = message;
 };
 
-export {
-  startGame,
-  renderBoard,
-  updateBoard,
-  getDrawRequest,
-  clearEventListeners,
-};
+export { startGame, renderBoard, updateBoard, getDrawRequest, clearElements };

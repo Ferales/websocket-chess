@@ -126,13 +126,6 @@ io.on("connection", (socket) => {
 
     clearSession(socket.roomID);
   });
-
-  socket.on("disconnect", () => {
-    let room = rooms.find((room) => room.roomID == socket.roomID);
-    if (!room.full) {
-      clearSession(socket.roomID);
-    }
-  });
 });
 
 server.listen(PORT, () => {
@@ -191,9 +184,10 @@ let outOfTimeHandler = (roomID, color) => {
 
 let outOfTIme = (roomID, message) => {
   let players = getConnectedPlayers(roomID);
+  let room = rooms.find((room) => room.roomID == roomID);
 
   for (let player of players) {
-    io.to(player.id).emit("outOfTime", message);
+    io.to(player.id).emit("gameOver", message, room.board);
   }
 
   clearSession(roomID);

@@ -5,5 +5,6 @@ function sendGameRequest(gameTime, increment) {
 }
 
 if (localStorage.getItem("userID") && localStorage.getItem("roomID")) {
+  localStorage.clear();
   window.location.href += "game";
 }

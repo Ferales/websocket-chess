@@ -150,7 +150,11 @@ export class Pawn extends Piece {
     if (board[row + rowOffset][column] == "EMPTY") {
       legalSquares.push(this.getSquareId(row + rowOffset, column));
     }
-    if (!this.moved && board[row + rowOffset * 2][column] == "EMPTY") {
+    if (
+      !this.moved &&
+      board[row + rowOffset][column] == "EMPTY" &&
+      board[row + rowOffset * 2][column] == "EMPTY"
+    ) {
       legalSquares.push(this.getSquareId(row + rowOffset * 2, column));
     }
 

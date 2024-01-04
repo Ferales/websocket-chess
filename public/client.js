@@ -3,7 +3,7 @@ import {
   renderBoard,
   updateBoard,
   getDrawRequest,
-  clearEventListeners,
+  clearElements,
 } from "./index.js";
 import * as Pieces from "./pieces.js";
 import * as TimerHandler from "./timerHelpers.js";
@@ -22,7 +22,6 @@ const userID = localStorage.getItem("userID");
 const roomID = localStorage.getItem("roomID");
 
 if (userID && roomID) {
-  console.log(userID);
   socket.auth = { userID, roomID };
 }
 
@@ -55,16 +54,10 @@ socket.on("connect", () => {
 
   socket.on("gameOver", (message, board) => {
     TimerHandler.stopTimers();
-    clearEventListeners();
     Pieces.deserializeBoard(board);
     updateBoard(board);
     renderBoard();
-    console.log(message);
-  });
-
-  socket.on("outOfTime", (message) => {
-    TimerHandler.stopTimers();
-    console.log(message);
+    clearElements(message);
   });
 
   socket.on("clearIDs", () => {

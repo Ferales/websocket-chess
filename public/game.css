@@ -207,3 +207,19 @@ body {
 .draw-option {
   min-width: 3.5em;
 }
+
+#gameOverElements {
+  display: none;
+  flex-direction: column;
+  text-align: center;
+  max-width: 75%;
+}
+
+#goBack {
+  padding: 20px 10px;
+  width: 100%;
+}
+
+#gameOverMessage {
+  font-size: 18px;
+}
