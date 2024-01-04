@@ -80,19 +80,19 @@ body {
   row-gap: 5em;
 }
 
-.surrender {
+#surrender {
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.draw {
+#draw {
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.half {
+#half {
   margin-left: 5px;
   font-size: 36px;
 }
@@ -112,7 +112,15 @@ body {
   background-color: #555;
 }
 
-#popup {
+.disabled {
+  cursor: auto;
+}
+
+.disabled:hover {
+  background-color: #333;
+}
+
+.popup {
   display: none;
   position: fixed;
   top: 50%;
@@ -126,12 +134,12 @@ body {
   pointer-events: auto;
 }
 
-#popup-content img {
+.popup-content img {
   transform: scale(0.4);
   margin-right: -30px;
 }
 
-#popup-content {
+.popup-content {
   display: flex;
   pointer-events: all;
 }
@@ -171,4 +179,31 @@ body {
   100% {
     transform: rotate(360deg);
   }
+}
+
+#draw-options {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  text-align: center;
+  width: 83%;
+  position: absolute;
+  top: 70%;
+}
+
+#drawOffer {
+  display: none;
+  width: 83%;
+  text-align: center;
+}
+
+#drawRequest {
+  display: none;
+  width: 50%;
+  padding: 20px 20px;
+  text-align: center;
+}
+
+.draw-option {
+  min-width: 3.5em;
 }

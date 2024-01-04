@@ -2,6 +2,7 @@ import * as Pieces from "./pieces.js";
 import * as Board from "./board.js";
 import { socket, playerColor, promotionRow } from "./client.js";
 import * as TimerHandler from "./timerHelpers.js";
+import { Timer } from "./timer.js";
 
 let chessboard = document.getElementById("chessboard");
 let currentPiece;
@@ -12,7 +13,6 @@ let selectedPieceColor;
 let row;
 let column;
 let mate;
-let popupElement = document.getElementById("popup");
 let onMove = false;
 let board = new Board.Board().board;
 
@@ -193,13 +193,16 @@ let startGame = (recconect = false) => {
     }
   }
   renderBoard();
+  setEventListeners();
 };
 
 let openPopup = () => {
+  let popupElement = document.getElementsByClassName("popup")[0];
+
   document.body.style.pointerEvents = "none";
   popupElement.style.display = "block";
   let pieces = ["bishop", "knight", "rook", "queen"];
-  let images = document.querySelectorAll("#popup-content img");
+  let images = document.querySelectorAll(".popup-content img");
   for (let i = 0; i < images.length; i++) {
     images[i].src = `./icons/${playerColor}_${pieces[i]}.png`;
     images[i].addEventListener("click", promotePawn.bind(null, pieces[i]));
@@ -207,13 +210,13 @@ let openPopup = () => {
 };
 
 let promotePawn = (promotionPiece) => {
+  let popupElement = document.getElementsByClassName("popup")[0];
   let classNames = {
     knight: Pieces.Knight,
     bishop: Pieces.Bishop,
     rook: Pieces.Rook,
     queen: Pieces.Queen,
   };
-  let popupElement = document.getElementById("popup");
   let piece = classNames[promotionPiece];
   board[Math.floor(targetSquareId / 8)][targetSquareId % 8] = new piece(
     playerColor,
@@ -238,6 +241,7 @@ let promotePawn = (promotionPiece) => {
 
 let gameOver = (endCondition) => {
   TimerHandler.stopTimers();
+  clearEventListeners();
   let message;
   let winnerMessage;
   switch (endCondition) {
@@ -260,4 +264,68 @@ let gameOver = (endCondition) => {
   socket.emit("gameOver", message, board);
 };
 
-export { startGame, renderBoard, updateBoard, gameOver };
+let sendDrawRequest = () => {
+  let drawButton = document.getElementById("draw");
+  let drawRequestInfo = document.getElementById("drawRequest");
+
+  drawButton.style.display = "none";
+  drawRequestInfo.style.display = "inline";
+
+  setTimeout(() => {
+    drawButton.style.display = "flex";
+    drawRequestInfo.style.display = "none";
+  }, 15000);
+
+  socket.emit("sendDrawRequest");
+};
+
+let getDrawRequest = () => {
+  let drawButton = document.getElementById("draw");
+  let drawOffer = document.getElementById("drawOffer");
+
+  drawButton.style.display = "none";
+  drawOffer.style.display = "flex";
+
+  setTimeout(() => {
+    drawButton.style.display = "flex";
+    drawOffer.style.display = "none";
+  }, 15000);
+};
+
+let setEventListeners = () => {
+  document.getElementById("surrender").addEventListener("click", () => {
+    gameOver("surrender");
+  });
+
+  document.getElementById("draw").addEventListener("click", () => {
+    sendDrawRequest();
+  });
+
+  document.getElementById("accept-draw").addEventListener("click", () => {
+    gameOver("draw");
+  });
+
+  document.getElementById("reject-draw").addEventListener("click", () => {
+    let drawButton = document.getElementById("draw");
+    let drawOptions = document.getElementById("draw-options");
+
+    drawButton.style.display = "flex";
+    drawOptions.style.display = "none";
+  });
+};
+
+let clearEventListeners = () => {
+  let elementsIds = ["surrender", "draw", "accept-draw", "reject-draw"];
+  for (let elementId of elementsIds) {
+    let element = document.getElementById(elementId);
+    element.replaceWith(element.cloneNode(true));
+  }
+};
+
+export {
+  startGame,
+  renderBoard,
+  updateBoard,
+  getDrawRequest,
+  clearEventListeners,
+};

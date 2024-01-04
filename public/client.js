@@ -1,4 +1,10 @@
-import { startGame, renderBoard, updateBoard } from "./index.js";
+import {
+  startGame,
+  renderBoard,
+  updateBoard,
+  getDrawRequest,
+  clearEventListeners,
+} from "./index.js";
 import * as Pieces from "./pieces.js";
 import * as TimerHandler from "./timerHelpers.js";
 
@@ -49,6 +55,7 @@ socket.on("connect", () => {
 
   socket.on("gameOver", (message, board) => {
     TimerHandler.stopTimers();
+    clearEventListeners();
     Pieces.deserializeBoard(board);
     updateBoard(board);
     renderBoard();
@@ -62,6 +69,10 @@ socket.on("connect", () => {
 
   socket.on("clearIDs", () => {
     localStorage.clear();
+  });
+
+  socket.on("getDrawRequest", () => {
+    getDrawRequest();
   });
 
   socket.on(

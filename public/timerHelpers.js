@@ -54,7 +54,6 @@ export let stopTimers = () => {
 
 export let restoreTimers = (color, timeWhite, timeBlack, currentTimerColor) => {
   setTimerElements(color);
-  debugger;
 
   timerWhite = new Timer(timeWhite);
   timerBlack = new Timer(timeBlack);

@@ -106,12 +106,32 @@ io.on("connection", (socket) => {
     room.timers.changeTimers();
   });
 
+  socket.on("surrender", () => {
+    let players = getConnectedPlayers(socket.roomID);
+    let player = players.find((player) => player.id != socket.id);
+    io.to(player.id).emit("surrender");
+    clearSession(socket.roomID);
+  });
+
+  socket.on("sendDrawRequest", () => {
+    let players = getConnectedPlayers(socket.roomID);
+    let player = players.find((player) => player.id != socket.id);
+    io.to(player.id).emit("getDrawRequest");
+  });
+
   socket.on("gameOver", (message, board) => {
     let players = getConnectedPlayers(socket.roomID);
     let player = players.find((player) => player.id != socket.id);
     io.to(player.id).emit("gameOver", message, board);
 
     clearSession(socket.roomID);
+  });
+
+  socket.on("disconnect", () => {
+    let room = rooms.find((room) => room.roomID == socket.roomID);
+    if (!room.full) {
+      clearSession(socket.roomID);
+    }
   });
 });
 

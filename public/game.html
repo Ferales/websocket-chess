@@ -12,13 +12,17 @@
   <body>
     <div id="main">
       <div id="chessboard">
-        <div id="popup">
-          <div id="popup-content">
+        <div class="popup">
+          <div class="popup-content">
             <img />
             <img />
             <img />
             <img />
           </div>
+        </div>
+        <div class="popup">
+          <h2>test</h2>
+          <button>test</button>
         </div>
         <div id="loader-container">
           <p>Oczekiwanie na przeciwnika</p>
@@ -28,13 +32,25 @@
       <div class="ui">
         <div class="timer timer-top">10:00</div>
         <div class="options">
-          <div class="btn surrender">
+          <div id="surrender" class="btn">
             <span>Poddaj się</span>
-            <img class="flag" src="/icons/flag.png" />
+            <img id="flag" src="/icons/flag.png" />
           </div>
-          <div class="btn draw">
+          <div id="draw" class="btn">
             <span>Zaproponuj remis</span>
-            <span class="half">&#189;</span>
+            <span id="half">&#189;</span>
+          </div>
+          <div id="drawRequest" class="btn disabled">Zaproponowano remis</div>
+          <div id="drawOffer">
+            <div class="btn disabled">Przeciwnik zaproponował remis</div>
+            <div id="draw-options">
+              <div id="accept-draw" class="btn draw-option">
+                <span>Akceptuj</span>
+              </div>
+              <div id="reject-draw" class="btn draw-option">
+                <span>Odrzuć</span>
+              </div>
+            </div>
           </div>
         </div>
         <div class="timer timer-bottom">10:00</div>
