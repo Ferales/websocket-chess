@@ -42,11 +42,6 @@ export class Piece {
   }
 
   static hasGameEnded(board, color) {
-    let opponentsColor = color == "white" ? "black" : "white";
-    let check = false;
-    if (Piece.checkForCheck(board, opponentsColor)) {
-      check = true;
-    }
     for (let i = 0; i < 8; i++) {
       for (let j = 0; j < 8; j++) {
         if (board[i][j] != "EMPTY" && board[i][j].color != color) {
@@ -63,6 +58,8 @@ export class Piece {
         }
       }
     }
+    let opponentsColor = color == "white" ? "black" : "white";
+    let check = Piece.checkForCheck(board, opponentsColor);
     return check ? "checkmate" : "stalemate";
   }
 
@@ -206,9 +203,9 @@ export class Knight extends Piece {
 
       if (newRow >= 0 && newRow <= 7 && newColumn >= 0 && newColumn <= 7) {
         if (
-          (board[newRow][newColumn] &&
+          (board[newRow][newColumn] != "EMPTY" &&
             board[newRow][newColumn].color != this.color) ||
-          !board[newRow][newColumn]
+          board[newRow][newColumn] == "EMPTY"
         ) {
           legalSquares.push(this.getSquareId(newRow, newColumn));
         }
@@ -342,7 +339,11 @@ export class King extends Piece {
         }
       }
     }
-    if (!this.moved && calculateCastle) {
+    if (
+      !this.moved &&
+      calculateCastle &&
+      !Piece.checkForCheck(board, this.color)
+    ) {
       let rookRow = this.color == "white" ? 7 : 0;
       let tmpBoard = structuredClone(board);
       deserializeBoard(tmpBoard);

@@ -5,7 +5,6 @@ body {
   padding: 0;
   overflow: hidden;
   background: radial-gradient(circle at center, #d6d6d6, #3c3c3c);
-  /* background-color: #333333; */
 }
 
 .main {

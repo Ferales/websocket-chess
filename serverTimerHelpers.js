@@ -14,7 +14,7 @@ class Timer {
     this.startingTime = this.time;
     this.referenceTime = Date.now();
     this.intervalId = setInterval(() => {
-      const elapsedTime = Date.now() - this.referenceTime;
+      let elapsedTime = Date.now() - this.referenceTime;
       this.time = this.startingTime - elapsedTime;
       if (this.time <= 0) {
         this.outOfTimeHandler(this.roomID, this.color);

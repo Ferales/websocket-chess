@@ -11,7 +11,7 @@ export class Timer {
     this.startingTime = this.time;
     this.referenceTime = Date.now();
     this.intervalId = setInterval(() => {
-      const elapsedTime = Date.now() - this.referenceTime;
+      let elapsedTime = Date.now() - this.referenceTime;
       this.time = this.startingTime - elapsedTime;
     }, 100);
     this.started = true;
