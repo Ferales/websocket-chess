@@ -1,3 +1,4 @@
+import { Board } from "./board.js";
 import {
   startGame,
   renderBoard,
@@ -72,13 +73,21 @@ socket.on("connect", () => {
     "reconnect",
     (board, timerWhite, timerBlack, currentTimerColor, color, onMove) => {
       playerColor = color;
-      Pieces.deserializeBoard(board);
+      let hasGameStarted;
+      if (board) {
+        Pieces.deserializeBoard(board);
+        hasGameStarted = true;
+      } else {
+        board = new Board().board;
+        hasGameStarted = false;
+      }
       updateBoard(board, { reconnectOnMove: onMove });
       TimerHandler.restoreTimers(
         playerColor,
         timerWhite,
         timerBlack,
-        currentTimerColor
+        currentTimerColor,
+        hasGameStarted
       );
       startGame(true);
     }

@@ -52,18 +52,28 @@ export let stopTimers = () => {
   clearInterval(timerInterval);
 };
 
-export let restoreTimers = (color, timeWhite, timeBlack, currentTimerColor) => {
+export let restoreTimers = (
+  color,
+  timeWhite,
+  timeBlack,
+  currentTimerColor,
+  hasGameStarted
+) => {
   setTimerElements(color);
 
   timerWhite = new Timer(timeWhite);
   timerBlack = new Timer(timeBlack);
 
   if (currentTimerColor == "white") {
-    timerWhite.start();
+    if (hasGameStarted) {
+      timerWhite.start();
+    }
     currentTimer = timerWhite;
     currentTimerElement = timerWhiteElement;
   } else {
-    timerBlack.start();
+    if (hasGameStarted) {
+      timerBlack.start();
+    }
     currentTimer = timerBlack;
     currentTimerElement = timerBlackElement;
   }

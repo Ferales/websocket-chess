@@ -126,6 +126,16 @@ io.on("connection", (socket) => {
 
     clearSession(socket.roomID);
   });
+
+  socket.on("disconnect", () => {
+    let room = rooms.find((room) => room.roomID == socket.roomID);
+    if (room) {
+      if (room.players.length < 2) {
+        console.log("test");
+        rooms = rooms.filter((r) => r.roomID != room.roomID);
+      }
+    }
+  });
 });
 
 server.listen(PORT, () => {
