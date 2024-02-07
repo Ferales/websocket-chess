@@ -106,13 +106,6 @@ io.on("connection", (socket) => {
     room.timers.changeTimers();
   });
 
-  socket.on("surrender", () => {
-    let players = getConnectedPlayers(socket.roomID);
-    let player = players.find((player) => player.id != socket.id);
-    io.to(player.id).emit("surrender");
-    clearSession(socket.roomID);
-  });
-
   socket.on("sendDrawRequest", () => {
     let players = getConnectedPlayers(socket.roomID);
     let player = players.find((player) => player.id != socket.id);
@@ -131,7 +124,6 @@ io.on("connection", (socket) => {
     let room = rooms.find((room) => room.roomID == socket.roomID);
     if (room) {
       if (room.players.length < 2) {
-        console.log("test");
         rooms = rooms.filter((r) => r.roomID != room.roomID);
       }
     }
@@ -195,6 +187,7 @@ let outOfTimeHandler = (roomID, color) => {
 let outOfTIme = (roomID, message) => {
   let players = getConnectedPlayers(roomID);
   let room = rooms.find((room) => room.roomID == roomID);
+  room.timers.stopTimers();
 
   for (let player of players) {
     io.to(player.id).emit("gameOver", message, room.board);

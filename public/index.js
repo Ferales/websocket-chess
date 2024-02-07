@@ -104,8 +104,6 @@ let squareClick = (e) => {
         } else {
           board[Math.floor(targetSquareId / 8)][targetSquareId % 8] =
             selectedPiece;
-          board[Math.floor(targetSquareId / 8)][targetSquareId % 8] =
-            selectedPiece;
           if (selectedPiece.name == "king") {
             if (targetSquareId == selectedPieceSquareId - 2) {
               board[row][column - 1] = board[row][0];
